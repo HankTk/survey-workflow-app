@@ -1,0 +1,150 @@
+<div class="dashboard-page">
+  <div class="welcome-section">
+    <mat-card class="welcome-card">
+      <mat-card-content>
+        <h1>Survey & Workflow Application</h1>
+        <p>XMLデータから動的にアンケートUIを生成し、ワークフロー管理とデータ分析を行う統合アプリケーション</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="quick-actions">
+    <div class="actions-grid">
+      <mat-card class="action-card" (click)="navigateTo('/survey')">
+        <mat-card-content>
+          <div class="action-icon">📋</div>
+          <h3>アンケート管理</h3>
+          <p>XMLデータから動的UI生成</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="action-card" (click)="navigateTo('/workflow')">
+        <mat-card-content>
+          <div class="action-icon">🔄</div>
+          <h3>ワークフロー</h3>
+          <p>文書回覧・承認フロー</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="action-card" (click)="navigateTo('/statistics')">
+        <mat-card-content>
+          <div class="action-icon">📊</div>
+          <h3>統計・分析</h3>
+          <p>データ可視化・インサイト</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <div class="features-overview">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>主要機能</mat-card-title>
+        <mat-card-subtitle>アプリケーションの特徴と利点</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-icon">🎯</div>
+            <h4>動的UI生成</h4>
+            <p>XMLデータを解析して、アンケートの質問形式やバリデーションルールに応じたUIを自動生成します。</p>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">📝</div>
+            <h4>柔軟な質問形式</h4>
+            <p>テキスト、数値、選択肢、チェックボックス、日付など、多様な質問タイプに対応しています。</p>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">✅</div>
+            <h4>バリデーション</h4>
+            <p>必須項目、数値範囲、正規表現パターンなど、XMLで定義された検証ルールを適用します。</p>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">🔄</div>
+            <h4>ワークフロー管理</h4>
+            <p>文書の承認フローを段階的に管理し、各ステップの進捗状況を可視化します。</p>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <h4>データ分析</h4>
+            <p>アンケート回答とワークフローの統計情報を収集し、インサイトを提供します。</p>
+          </div>
+          
+          <div class="feature-item">
+            <div class="feature-icon">🎨</div>
+            <h4>モダンUI</h4>
+            <p>Angular Materialを使用した美しく使いやすいインターフェースを提供します。</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="technology-stack">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>技術スタック</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="tech-chips">
+          <mat-chip-set>
+            <mat-chip>Angular 17</mat-chip>
+            <mat-chip>TypeScript</mat-chip>
+            <mat-chip>Angular Material</mat-chip>
+            <mat-chip>Reactive Forms</mat-chip>
+            <mat-chip>Chart.js</mat-chip>
+            <mat-chip>SCSS</mat-chip>
+            <mat-chip>Standalone Components</mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="getting-started">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>はじめに</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <h4>アンケートの作成</h4>
+              <p>XMLファイルでアンケートの構造を定義します。質問、選択肢、バリデーションルールを設定できます。</p>
+            </div>
+          </div>
+          
+          <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <h4>動的UI生成</h4>
+              <p>XMLデータを読み込むと、定義された内容に基づいて自動的にアンケートUIが生成されます。</p>
+            </div>
+          </div>
+          
+          <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <h4>回答の収集</h4>
+              <p>生成されたUIでユーザーが回答を入力し、バリデーションが適用されます。</p>
+            </div>
+          </div>
+          
+          <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <h4>データ分析</h4>
+              <p>収集された回答データを分析し、統計情報やグラフで可視化します。</p>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

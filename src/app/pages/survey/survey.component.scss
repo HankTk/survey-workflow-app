@@ -1,0 +1,110 @@
+.survey-page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  padding: 24px;
+}
+
+.page-header mat-card-content {
+  padding: 0 !important;
+}
+
+.loading-container {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-container p {
+  margin-top: 16px;
+  color: #666;
+}
+
+.error-container {
+  margin: 20px 0;
+}
+
+.error-card {
+  background-color: #ffebee;
+  border: 1px solid #f44336;
+}
+
+.survey-content {
+  margin: 20px 0;
+}
+
+.responses-section {
+  margin-top: 40px;
+}
+
+.response-item {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.response-item h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+.response-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.response-detail {
+  padding: 4px 0;
+}
+
+.response-detail strong {
+  color: #666;
+}
+
+.responses-actions {
+  margin-bottom: 20px;
+  text-align: right;
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.response-header h4 {
+  margin: 0;
+}
+
+.delete-button {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 768px) {
+  .survey-page {
+    padding: 16px;
+  }
+  
+  .page-header {
+    padding: 20px;
+  }
+  
+  .response-details {
+    grid-template-columns: 1fr;
+  }
+
+  .response-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

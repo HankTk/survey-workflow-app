@@ -1,0 +1,102 @@
+<div class="workflow-page">
+  <mat-card class="page-header">
+    <mat-card-header>
+      <mat-card-title>文書回覧・承認ワークフロー</mat-card-title>
+      <mat-card-subtitle>文書の承認フローとステータス管理</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>文書の承認フローを管理し、各ステップの進捗状況を追跡します。</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="createNewDocument()">
+        新規文書作成
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div class="documents-grid">
+    <mat-card *ngFor="let doc of documents" class="document-card">
+      <mat-card-header>
+        <mat-card-title>{{ doc.title }}</mat-card-title>
+        <mat-card-subtitle>
+          作成日: {{ doc.createdAt | date:'short' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <div class="status-section">
+          <mat-chip-set>
+            <mat-chip [color]="getStatusColor(doc.status)" selected>
+              {{ getStatusText(doc.status) }}
+            </mat-chip>
+            <mat-chip>ステップ {{ doc.currentStep }}/{{ doc.steps.length }}</mat-chip>
+          </mat-chip-set>
+        </div>
+
+        <div class="content-preview">
+          {{ doc.content.substring(0, 100) }}{{ doc.content.length > 100 ? '...' : '' }}
+        </div>
+
+        <div class="workflow-progress">
+          <mat-stepper [linear]="false" orientation="vertical">
+            <mat-step *ngFor="let step of doc.steps; let i = index" 
+                     [completed]="step.status === 'completed'"
+                     [state]="getStepState(step, i, doc.currentStep)">
+              <ng-template matStepLabel>
+                <div class="step-label">
+                  <span class="step-name">{{ step.name }}</span>
+                  <span class="step-assignee">担当: {{ step.assignee }}</span>
+                  <mat-chip [color]="getStepStatusColor(step.status)" selected>
+                    {{ getStepStatusText(step.status) }}
+                  </mat-chip>
+                </div>
+              </ng-template>
+              
+              <div class="step-content">
+                <p *ngIf="step.comments && step.comments.length > 0">
+                  コメント: {{ step.comments.join(', ') }}
+                </p>
+                <p *ngIf="step.completedAt">
+                  完了日時: {{ step.completedAt | date:'short' }}
+                </p>
+                
+                <div class="step-actions" *ngIf="canProcessStep(doc, step, i)">
+                  <button mat-raised-button 
+                          color="primary" 
+                          (click)="approveStep(doc, step, i)"
+                          *ngIf="step.status === 'pending'">
+                    承認
+                  </button>
+                  <button mat-raised-button 
+                          color="warn" 
+                          (click)="rejectStep(doc, step, i)"
+                          *ngIf="step.status === 'pending'">
+                    却下
+                  </button>
+                  <button mat-button 
+                          (click)="addComment(doc, step, i)">
+                    コメント追加
+                  </button>
+                </div>
+              </div>
+            </mat-step>
+          </mat-stepper>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button 
+                (click)="viewDocument(doc)">
+          詳細表示
+        </button>
+        <button mat-button 
+                (click)="editDocument(doc)"
+                *ngIf="doc.status === 'draft'">
+          編集
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

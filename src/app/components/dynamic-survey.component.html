@@ -1,0 +1,110 @@
+<div class="survey-container" *ngIf="survey">
+  <mat-card class="survey-header">
+    <mat-card-header>
+      <mat-card-title>{{ survey.title }}</mat-card-title>
+      <mat-card-subtitle *ngIf="survey.description">{{ survey.description }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content *ngIf="survey.metadata">
+      <div class="metadata">
+        <mat-chip-set>
+          <mat-chip>作成日: {{ survey.metadata.created }}</mat-chip>
+          <mat-chip>バージョン: {{ survey.metadata.version }}</mat-chip>
+          <mat-chip>作成者: {{ survey.metadata.author }}</mat-chip>
+        </mat-chip-set>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <form [formGroup]="surveyForm" (ngSubmit)="onSubmit()">
+    <div *ngFor="let section of survey.sections" class="section">
+      <mat-card class="section-card">
+        <mat-card-header>
+          <mat-card-title>{{ section.title }}</mat-card-title>
+          <mat-card-subtitle *ngIf="section.description">{{ section.description }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngFor="let question of section.questions" class="question">
+            <div class="question-label">
+              {{ question.label }}
+              <span *ngIf="question.required" class="required">*</span>
+            </div>
+            
+            <!-- Text Input -->
+            <mat-form-field *ngIf="question.type === 'text'" class="form-field">
+              <input matInput 
+                     [formControlName]="question.id"
+                     [placeholder]="question.placeholder || ''"
+                     [required]="question.required">
+            </mat-form-field>
+
+            <!-- Number Input -->
+            <mat-form-field *ngIf="question.type === 'number'" class="form-field">
+              <input matInput 
+                     type="number"
+                     [formControlName]="question.id"
+                     [placeholder]="question.placeholder || ''"
+                     [required]="question.required"
+                     [min]="question.validation?.min ?? null"
+                     [max]="question.validation?.max ?? null">
+            </mat-form-field>
+
+            <!-- Select Dropdown -->
+            <mat-form-field *ngIf="question.type === 'select'" class="form-field">
+              <mat-select [formControlName]="question.id" [required]="question.required">
+                <mat-option *ngFor="let option of question.options" [value]="option">
+                  {{ option }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <!-- Radio Buttons -->
+            <mat-radio-group *ngIf="question.type === 'radio'" 
+                           [formControlName]="question.id" 
+                           class="radio-group">
+              <mat-radio-button *ngFor="let option of question.options" 
+                              [value]="option" 
+                              class="radio-button">
+                {{ option }}
+              </mat-radio-button>
+            </mat-radio-group>
+
+            <!-- Checkboxes -->
+            <div *ngIf="question.type === 'checkbox'" class="checkbox-group">
+              <mat-checkbox *ngFor="let option of question.options; let i = index"
+                          [formControlName]="question.id + '_' + i"
+                          class="checkbox-button">
+                {{ option }}
+              </mat-checkbox>
+            </div>
+
+            <!-- Textarea -->
+            <mat-form-field *ngIf="question.type === 'textarea'" class="form-field">
+              <textarea matInput 
+                       [formControlName]="question.id"
+                       [placeholder]="question.placeholder || ''"
+                       [required]="question.required"
+                       rows="4"></textarea>
+            </mat-form-field>
+
+            <!-- Date Input -->
+            <mat-form-field *ngIf="question.type === 'date'" class="form-field">
+              <input matInput 
+                     type="date"
+                     [formControlName]="question.id"
+                     [required]="question.required">
+            </mat-form-field>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <div class="submit-section">
+      <button mat-raised-button 
+              color="primary" 
+              type="submit" 
+              [disabled]="surveyForm.invalid">
+        アンケートを送信
+      </button>
+    </div>
+  </form>
+</div>

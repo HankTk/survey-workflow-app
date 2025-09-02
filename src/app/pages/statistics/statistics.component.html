@@ -1,0 +1,117 @@
+<div class="statistics-page">
+  <mat-card class="page-header">
+    <mat-card-header>
+      <mat-card-title>データ統計・分析</mat-card-title>
+      <mat-card-subtitle>アンケート回答とワークフローの統計情報</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>アプリケーション全体の利用状況とパフォーマンスを可視化します。</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="stats-overview">
+    <mat-grid-list cols="4" rowHeight="120px" gutterSize="16px">
+      <mat-grid-tile>
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-number">{{ statistics.surveyResponses }}</div>
+            <div class="stat-label">アンケート回答数</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+      
+      <mat-grid-tile>
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-number">{{ statistics.workflowDocuments }}</div>
+            <div class="stat-label">ワークフロー文書数</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+      
+      <mat-grid-tile>
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-number">{{ statistics.averageResponseTime | number:'1.1-1' }}日</div>
+            <div class="stat-label">平均応答時間</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+      
+      <mat-grid-tile>
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-number">{{ statistics.completionRate | number:'1.1-1' }}%</div>
+            <div class="stat-label">完了率</div>
+          </mat-card-content>
+        </mat-card>
+      </mat-grid-tile>
+    </mat-grid-list>
+  </div>
+
+  <div class="charts-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>月次トレンド</mat-card-title>
+        <mat-card-subtitle>アンケート回答数とワークフロー文書数の推移</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <canvas #monthlyChart width="400" height="200"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="detailed-stats">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>詳細統計</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="stats-table">
+          <div class="stats-row header">
+            <div class="stats-cell">月</div>
+            <div class="stats-cell">アンケート回答数</div>
+            <div class="stats-cell">ワークフロー文書数</div>
+            <div class="stats-cell">合計</div>
+          </div>
+          <div class="stats-row" *ngFor="let data of statistics.monthlyData">
+            <div class="stats-cell">{{ data.month }}</div>
+            <div class="stats-cell">{{ data.responses }}</div>
+            <div class="stats-cell">{{ data.documents }}</div>
+            <div class="stats-cell">{{ data.responses + data.documents }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="insights-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>分析インサイト</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="insights-grid">
+          <div class="insight-item">
+            <h4>📈 成長トレンド</h4>
+            <p>アンケート回答数は前月比15%増加しており、ユーザーエンゲージメントが向上しています。</p>
+          </div>
+          <div class="insight-item">
+            <h4>⏱️ 効率性</h4>
+            <p>ワークフローの平均完了時間が2.3日から1.8日に短縮され、承認プロセスが効率化されています。</p>
+          </div>
+          <div class="insight-item">
+            <h4>🎯 完了率</h4>
+            <p>全体の完了率は87.5%で、目標の85%を上回る良好な結果となっています。</p>
+          </div>
+          <div class="insight-item">
+            <h4>📊 季節性</h4>
+            <p>月末にアンケート回答数が増加する傾向があり、定期報告のタイミングと一致しています。</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

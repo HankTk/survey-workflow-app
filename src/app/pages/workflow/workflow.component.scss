@@ -1,0 +1,70 @@
+.workflow-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 20px;
+}
+
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.document-card {
+  margin-bottom: 20px;
+}
+
+.status-section {
+  margin: 16px 0;
+}
+
+.content-preview {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-style: italic;
+  color: #666;
+}
+
+.workflow-progress {
+  margin: 20px 0;
+}
+
+.step-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.step-name {
+  font-weight: 500;
+}
+
+.step-assignee {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.step-content {
+  padding: 16px 0;
+}
+
+.step-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mat-stepper-vertical {
+  margin-top: 8px;
+}
+
+.mat-step-header {
+  padding: 8px 0;
+}

@@ -1,0 +1,70 @@
+@use '@angular/material' as mat;
+@use '@angular/material/core/m2' as m2;
+
+@include mat.core();
+
+$primary-palette: m2.define-palette(m2.$indigo-palette);
+$accent-palette: m2.define-palette(m2.$pink-palette, A200, A100, A400);
+$warn-palette: m2.define-palette(m2.$red-palette);
+
+$theme: m2.define-light-theme((
+  color: (
+    primary: $primary-palette,
+    accent: $accent-palette,
+    warn: $warn-palette,
+  ),
+  typography: m2.define-typography-config(),
+  density: 0,
+));
+
+@include mat.all-component-themes($theme);
+
+html, body { 
+  height: 100%; 
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #f5f5f5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  padding: 20px;
+}
+
+.card {
+  margin-bottom: 20px;
+}
+
+.form-field {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* デバッグ用スタイル */
+.debug-info {
+  background-color: #e3f2fd;
+  border: 2px solid #2196f3;
+  padding: 20px;
+  margin: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.debug-info h2 {
+  color: #1976d2;
+  margin-bottom: 10px;
+}
+
+.debug-info p {
+  color: #424242;
+  margin: 5px 0;
+}

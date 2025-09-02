@@ -1,0 +1,22 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.main-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+}
+
+.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+mat-toolbar {
+  margin-bottom: 20px;
+}

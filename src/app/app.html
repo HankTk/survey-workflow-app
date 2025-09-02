@@ -1,0 +1,14 @@
+<mat-toolbar color="primary">
+  <span>Survey & Workflow Application</span>
+  <span class="spacer"></span>
+  <nav>
+    <a mat-button routerLink="/dashboard" routerLinkActive="active">ダッシュボード</a>
+    <a mat-button routerLink="/survey" routerLinkActive="active">アンケート</a>
+    <a mat-button routerLink="/workflow" routerLinkActive="active">文書回覧</a>
+    <a mat-button routerLink="/statistics" routerLinkActive="active">統計</a>
+  </nav>
+</mat-toolbar>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>

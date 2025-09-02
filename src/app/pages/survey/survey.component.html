@@ -1,0 +1,74 @@
+<div class="survey-page">
+  <mat-card class="page-header">
+    <mat-card-header>
+      <mat-card-title>アンケート管理</mat-card-title>
+      <mat-card-subtitle>XMLデータから動的にアンケートUIを生成</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>サンプルのアンケートXMLデータを読み込んで、動的にUIを生成します。</p>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button 
+              color="primary" 
+              (click)="loadSampleSurvey()"
+              [disabled]="isLoading">
+        サンプルアンケートを読み込み
+      </button>
+      <button mat-button 
+              (click)="clearSurvey()"
+              [disabled]="!survey">
+        クリア
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>アンケートを読み込み中...</p>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <h3>エラーが発生しました</h3>
+        <p>{{ error }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div *ngIf="survey && !isLoading" class="survey-content">
+    <app-dynamic-survey 
+      [survey]="survey"
+      (surveySubmitted)="onSurveySubmitted($event)">
+    </app-dynamic-survey>
+  </div>
+
+  <div *ngIf="submittedResponses.length > 0" class="responses-section">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>送信された回答 ({{ submittedResponses.length }}件)</mat-card-title>
+        <mat-card-subtitle>これまでに送信されたアンケート回答</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="responses-actions">
+          <button mat-button color="warn" (click)="clearAllResponses()">
+            すべての回答を削除
+          </button>
+        </div>
+        <div *ngFor="let response of submittedResponses; let i = index" class="response-item">
+          <div class="response-header">
+            <h4>回答 {{ i + 1 }} - {{ response.submittedAt | date:'medium' }}</h4>
+            <button mat-icon-button color="warn" (click)="deleteResponse(i)" class="delete-button">
+              🗑️
+            </button>
+          </div>
+          <div class="response-details">
+            <div *ngFor="let item of response.responses" class="response-detail">
+              <strong>{{ item.questionLabel || item.questionId }}:</strong> {{ item.value }}
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

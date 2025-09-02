@@ -1,0 +1,65 @@
+.survey-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.survey-header {
+  margin-bottom: 20px;
+}
+
+.metadata {
+  margin-top: 16px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.section-card {
+  margin-bottom: 16px;
+}
+
+.question {
+  margin-bottom: 24px;
+}
+
+.question-label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.required {
+  color: #f44336;
+  margin-left: 4px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.radio-button {
+  margin-bottom: 8px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-button {
+  margin-bottom: 8px;
+}
+
+.submit-section {
+  text-align: center;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<survey id="employee-satisfaction-2024">
+  <title>従業員満足度調査 2024</title>
+  <description>職場環境と業務満足度に関する調査です。率直なご意見をお聞かせください。</description>
+  <metadata>
+    <created>2024-01-15</created>
+    <version>1.0</version>
+    <author>人事部</author>
+  </metadata>
+  
+  <section id="basic-info">
+    <title>基本情報</title>
+    <description>まずは基本的な情報をお聞かせください。</description>
+    <question id="department" type="select" required="true">
+      <label>所属部署</label>
+      <options>
+        <option>営業部</option>
+        <option>開発部</option>
+        <option>人事部</option>
+        <option>経理部</option>
+        <option>その他</option>
+      </options>
+    </question>
+    
+    <question id="years" type="number" required="true">
+      <label>勤続年数</label>
+      <placeholder>年数を入力してください</placeholder>
+      <validation>
+        <min>0</min>
+        <max>50</max>
+      </validation>
+    </question>
+  </section>
+  
+  <section id="work-environment">
+    <title>職場環境</title>
+    <description>職場環境について評価してください。</description>
+    
+    <question id="workplace-satisfaction" type="radio" required="true">
+      <label>職場環境の満足度</label>
+      <options>
+        <option>非常に満足</option>
+        <option>満足</option>
+        <option>普通</option>
+        <option>不満</option>
+        <option>非常に不満</option>
+      </options>
+    </question>
+    
+    <question id="work-life-balance" type="radio" required="true">
+      <label>ワークライフバランスの満足度</label>
+      <options>
+        <option>非常に満足</option>
+        <option>満足</option>
+        <option>普通</option>
+        <option>不満</option>
+        <option>非常に不満</option>
+      </options>
+    </question>
+    
+    <question id="improvements" type="textarea" required="false">
+      <label>職場環境の改善点</label>
+      <placeholder>具体的な改善提案があればお聞かせください</placeholder>
+    </question>
+  </section>
+  
+  <section id="job-satisfaction">
+    <title>業務満足度</title>
+    <description>現在の業務について評価してください。</description>
+    
+    <question id="job-interest" type="radio" required="true">
+      <label>業務への興味・関心</label>
+      <options>
+        <option>非常に高い</option>
+        <option>高い</option>
+        <option>普通</option>
+        <option>低い</option>
+        <option>非常に低い</option>
+      </options>
+    </question>
+    
+    <question id="growth-opportunity" type="radio" required="true">
+      <label>成長機会の充足度</label>
+      <options>
+        <option>非常に充足</option>
+        <option>充足</option>
+        <option>普通</option>
+        <option>不充足</option>
+        <option>非常に不充足</option>
+      </options>
+    </question>
+    
+    <question id="future-plans" type="select" required="false">
+      <label>今後のキャリアプラン</label>
+      <options>
+        <option>現在の業務を継続</option>
+        <option>異動を希望</option>
+        <option>転職を検討</option>
+        <option>独立・起業</option>
+        <option>未定</option>
+      </options>
+    </question>
+  </section>
+</survey>
