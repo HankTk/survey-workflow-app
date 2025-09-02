@@ -5,19 +5,50 @@
       <mat-card-subtitle>XMLデータから動的にアンケートUIを生成</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <p>サンプルのアンケートXMLデータを読み込んで、動的にUIを生成します。</p>
+      <p>利用可能なアンケートから選択して読み込むか、サンプルアンケートを読み込みます。</p>
+      
+      <div class="survey-selection">
+        <mat-form-field appearance="outline" class="survey-select">
+          <mat-label>アンケートを選択</mat-label>
+          <mat-select 
+            [(ngModel)]="selectedSurveyId" 
+            (selectionChange)="onSurveySelectionChange()"
+            placeholder="アンケートを選択してください">
+            <mat-option *ngFor="let surveyId of availableSurveys" [value]="surveyId">
+              {{ surveyId === 'sample-survey.xml' ? 'サンプルアンケート' : surveyId }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <button mat-raised-button 
+                color="primary" 
+                (click)="loadSelectedSurvey()"
+                [disabled]="isLoading || !selectedSurveyId">
+          {{ isLoading ? '読み込み中...' : '選択したアンケートを読み込み' }}
+        </button>
+      </div>
     </mat-card-content>
     <mat-card-actions>
-      <button mat-raised-button 
-              color="primary" 
-              (click)="loadSampleSurvey()"
-              [disabled]="isLoading">
-        サンプルアンケートを読み込み
-      </button>
       <button mat-button 
               (click)="clearSurvey()"
               [disabled]="!survey">
         クリア
+      </button>
+      <button mat-button 
+              (click)="loadAvailableSurveys()"
+              color="accent">
+        一覧を更新
+      </button>
+      <button mat-button 
+              (click)="deleteSelectedSurvey()"
+              color="warn"
+              [disabled]="!selectedSurveyId || selectedSurveyId === 'sample-survey.xml'">
+        🗑️ 選択したサーベイを削除
+      </button>
+      <button mat-button 
+              (click)="deleteAllSurveys()"
+              color="warn">
+        🗑️ すべてのサーベイを削除
       </button>
     </mat-card-actions>
   </mat-card>

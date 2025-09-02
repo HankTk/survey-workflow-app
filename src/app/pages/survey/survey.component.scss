@@ -4,6 +4,26 @@
   padding: 20px;
 }
 
+.survey-selection {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0;
+  
+  .survey-select {
+    min-width: 300px;
+  }
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    
+    .survey-select {
+      min-width: auto;
+    }
+  }
+}
+
 .page-header {
   margin-bottom: 20px;
   padding: 24px;

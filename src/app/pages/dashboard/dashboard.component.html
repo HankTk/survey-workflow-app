@@ -2,7 +2,7 @@
   <div class="welcome-section">
     <mat-card class="welcome-card">
       <mat-card-content>
-        <h1>Survey & Workflow Application</h1>
+        <h1>サーベイ・ワークフローアプリケーション</h1>
         <p>XMLデータから動的にアンケートUIを生成し、ワークフロー管理とデータ分析を行う統合アプリケーション</p>
       </mat-card-content>
     </mat-card>
@@ -15,6 +15,14 @@
           <div class="action-icon">📋</div>
           <h3>アンケート管理</h3>
           <p>XMLデータから動的UI生成</p>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="action-card" (click)="navigateTo('/survey-editor')">
+        <mat-card-content>
+          <div class="action-icon">✏️</div>
+          <h3>サーベイ編集</h3>
+          <p>サーベイの作成・編集・保存</p>
         </mat-card-content>
       </mat-card>
       
@@ -100,6 +108,71 @@
             <mat-chip>SCSS</mat-chip>
             <mat-chip>Standalone Components</mat-chip>
           </mat-chip-set>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- 保存されたサーベイ一覧 -->
+  <div class="saved-surveys" *ngIf="surveys.length > 0">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>保存されたサーベイ</mat-card-title>
+        <mat-card-subtitle>作成・編集したサーベイの一覧</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="surveys-grid" *ngIf="!isLoading">
+          <div 
+            *ngFor="let survey of surveys" 
+            class="survey-card"
+            (click)="editSurvey(survey.id)"
+          >
+            <div class="survey-header">
+              <h4>{{ survey.title }}</h4>
+              <div class="survey-actions">
+                <button 
+                  mat-icon-button 
+                  (click)="duplicateSurvey(survey.id, $event)"
+                  matTooltip="複製"
+                  class="action-btn"
+                  title="複製"
+                >
+                  📋
+                </button>
+                <button 
+                  mat-icon-button 
+                  (click)="deleteSurvey(survey.id, $event)"
+                  matTooltip="削除"
+                  class="action-btn delete-btn"
+                  title="削除"
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+            <p class="survey-description" *ngIf="survey.description">
+              {{ survey.description }}
+            </p>
+            <div class="survey-meta">
+              <span class="survey-id">識別子: {{ survey.id }}</span>
+              <span class="survey-sections">{{ survey.sections.length }} セクション</span>
+              <span class="survey-questions">
+                {{ getTotalQuestions(survey) }} 質問
+              </span>
+            </div>
+            <div class="survey-footer">
+              <span class="survey-author" *ngIf="survey.metadata?.author">
+                作成者: {{ survey.metadata?.author }}
+              </span>
+              <span class="survey-version" *ngIf="survey.metadata?.version">
+                バージョン {{ survey.metadata?.version }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="loading-message" *ngIf="isLoading">
+          <span>🔄</span>
+          <span>サーベイを読み込み中...</span>
         </div>
       </mat-card-content>
     </mat-card>

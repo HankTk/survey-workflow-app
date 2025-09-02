@@ -1,15 +1,19 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 import { DynamicSurveyComponent } from '../../components/dynamic-survey.component';
 import { XmlParserService } from '../../services/xml-parser.service';
 import { SurveyStorageService } from '../../services/survey-storage.service';
+import { SurveyFileService } from '../../services/survey-file.service';
 import { Survey, SurveyResponse } from '../../models/survey.model';
 
 @Component({
@@ -17,11 +21,14 @@ import { Survey, SurveyResponse } from '../../models/survey.model';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTabsModule,
+    MatSelectModule,
+    MatFormFieldModule,
     DynamicSurveyComponent
   ],
   templateUrl: './survey.component.html',
@@ -32,18 +39,24 @@ export class SurveyComponent implements OnInit {
   private http = inject(HttpClient);
   private xmlParser = inject(XmlParserService);
   private surveyStorage = inject(SurveyStorageService);
+  private surveyFileService = inject(SurveyFileService);
   private snackBar = inject(MatSnackBar);
 
   survey: Survey | null = null;
   isLoading = false;
   error: string | null = null;
   submittedResponses: SurveyResponse[] = [];
+  availableSurveys: string[] = [];
+  selectedSurveyId: string = '';
 
   ngOnInit()
   {
     // 保存された回答を読み込み
     const rawResponses = this.surveyStorage.getAllResponses();
     this.submittedResponses = this.convertLegacyResponses(rawResponses);
+    
+    // 利用可能なサーベイ一覧を読み込み
+    this.loadAvailableSurveys();
   }
 
   loadSampleSurvey()
@@ -145,6 +158,99 @@ export class SurveyComponent implements OnInit {
       'future-plans': '今後のキャリアプラン'
     };
     return labelMap[questionId] || questionId;
+  }
+
+  /**
+   * 利用可能なサーベイ一覧を読み込み
+   */
+  loadAvailableSurveys(): void {
+    // ローカルストレージに保存されたXMLサーベイを取得
+    const localSurveys = this.surveyFileService.getLocalStorageSurveyList();
+    
+    // サンプルサーベイも追加
+    this.availableSurveys = ['sample-survey.xml', ...localSurveys];
+  }
+
+  /**
+   * 選択されたサーベイを読み込み
+   */
+  loadSelectedSurvey(): void {
+    if (!this.selectedSurveyId) {
+      this.error = 'サーベイを選択してください';
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = null;
+
+    if (this.selectedSurveyId === 'sample-survey.xml') {
+      // サンプルサーベイを読み込み
+      this.loadSampleSurvey();
+    } else {
+      // ローカルストレージからXMLサーベイを読み込み
+      const survey = this.surveyFileService.loadSurveyFromLocalStorage(this.selectedSurveyId);
+      if (survey) {
+        this.survey = survey;
+        this.snackBar.open('サーベイが正常に読み込まれました', '閉じる', { duration: 3000 });
+        console.log('Loaded survey from localStorage:', survey);
+      } else {
+        this.error = 'サーベイの読み込みに失敗しました';
+      }
+      this.isLoading = false;
+    }
+  }
+
+  /**
+   * サーベイ選択が変更されたとき
+   */
+  onSurveySelectionChange(): void {
+    this.survey = null;
+    this.error = null;
+  }
+
+  /**
+   * 選択されたサーベイを削除
+   */
+  deleteSelectedSurvey(): void {
+    if (!this.selectedSurveyId || this.selectedSurveyId === 'sample-survey.xml') {
+      this.snackBar.open('サンプルサーベイは削除できません', '閉じる', { duration: 3000 });
+      return;
+    }
+
+    const confirmMessage = `サーベイ「${this.selectedSurveyId}」を削除しますか？\nこの操作は取り消せません。`;
+    if (confirm(confirmMessage)) {
+      const deleted = this.surveyFileService.deleteSurveyFromLocalStorage(this.selectedSurveyId);
+      if (deleted) {
+        this.snackBar.open('サーベイが削除されました', '閉じる', { duration: 3000 });
+        this.loadAvailableSurveys();
+        this.selectedSurveyId = '';
+        this.survey = null;
+        this.error = null;
+      } else {
+        this.snackBar.open('サーベイの削除に失敗しました', '閉じる', { duration: 3000 });
+      }
+    }
+  }
+
+  /**
+   * すべてのXMLサーベイを削除
+   */
+  deleteAllSurveys(): void {
+    const localSurveys = this.surveyFileService.getLocalStorageSurveyList();
+    if (localSurveys.length === 0) {
+      this.snackBar.open('削除するサーベイがありません', '閉じる', { duration: 3000 });
+      return;
+    }
+
+    const confirmMessage = `すべてのXMLサーベイ（${localSurveys.length}個）を削除しますか？\nこの操作は取り消せません。`;
+    if (confirm(confirmMessage)) {
+      const deletedCount = this.surveyFileService.clearAllSurveysFromLocalStorage();
+      this.snackBar.open(`${deletedCount}個のサーベイが削除されました`, '閉じる', { duration: 3000 });
+      this.loadAvailableSurveys();
+      this.selectedSurveyId = '';
+      this.survey = null;
+      this.error = null;
+    }
   }
 
 }

@@ -1,0 +1,365 @@
+<div class="survey-editor-container">
+  <div class="header">
+    <h1>{{ isEditing ? 'サーベイ編集' : '新規サーベイ作成' }}</h1>
+    <div class="header-actions">
+      <button type="button" class="btn btn-secondary" (click)="previewSurvey()" [disabled]="!surveyForm.valid">
+        プレビュー
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary" 
+        (click)="saveSurvey()" 
+        [disabled]="isLoading || (surveyForm.get('title')?.invalid && surveyForm.get('title')?.touched)"
+        [class.btn-warning]="getDuplicateMessage()"
+      >
+        {{ isLoading ? '保存中...' : (isEditing ? '更新' : '保存') }}
+        <span *ngIf="getDuplicateMessage()"> (重複あり)</span>
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-success" 
+        (click)="downloadAsXml()" 
+        [disabled]="!surveyForm.valid"
+        title="XMLファイルとしてダウンロード"
+      >
+        📥 XMLダウンロード
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-info" 
+        (click)="saveAsXmlToLocalStorage()" 
+        [disabled]="!surveyForm.valid"
+        title="ローカルストレージにXMLとして保存"
+      >
+        💾 XML保存
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-danger" 
+        (click)="deleteCurrentSurvey()" 
+        [disabled]="!currentSurvey"
+        title="現在のサーベイを削除"
+      >
+        🗑️ 削除
+      </button>
+      <button type="button" class="btn btn-outline" (click)="cancel()">
+        キャンセル
+      </button>
+    </div>
+  </div>
+
+  <div class="save-message" *ngIf="saveMessage" [class.success]="saveMessage.includes('正常')" [class.error]="saveMessage.includes('失敗')">
+    {{ saveMessage }}
+  </div>
+
+  <form [formGroup]="surveyForm" class="survey-form">
+    <!-- 基本情報 -->
+    <div class="form-section">
+      <h2>基本情報</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="survey-id">サーベイ識別子 *</label>
+          <input 
+            type="text" 
+            id="survey-id" 
+            formControlName="id" 
+            class="form-control"
+            [class.error]="surveyForm.get('id')?.invalid && surveyForm.get('id')?.touched"
+            [readonly]="!isEditing"
+            placeholder="例: employee-satisfaction-2024"
+          >
+          <div class="error-message" *ngIf="surveyForm.get('id')?.invalid && surveyForm.get('id')?.touched">
+            サーベイ識別子は必須です
+          </div>
+          <div class="info-message" *ngIf="!isEditing">
+            🔒 新規作成時は自動生成されます（編集時のみ変更可能）
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="survey-title">サーベイ名 *</label>
+          <input 
+            type="text" 
+            id="survey-title" 
+            formControlName="title" 
+            class="form-control"
+            [class.error]="surveyForm.get('title')?.invalid && surveyForm.get('title')?.touched"
+            placeholder="例: 従業員満足度調査 2024"
+            (input)="onTitleChange()"
+          >
+          <div class="error-message" *ngIf="surveyForm.get('title')?.invalid && surveyForm.get('title')?.touched">
+            サーベイ名は必須です
+          </div>
+          <div class="info-message" *ngIf="!isEditing">
+            💡 サーベイ名を入力すると、自動的に識別子が生成されます
+          </div>
+          <div class="warning-message" *ngIf="getDuplicateMessage()">
+            {{ getDuplicateMessage() }}
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="survey-description">説明</label>
+        <textarea 
+          id="survey-description" 
+          formControlName="description" 
+          class="form-control"
+          rows="3"
+          placeholder="サーベイの説明を入力してください"
+        ></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="survey-author">作成者</label>
+          <input 
+            type="text" 
+            id="survey-author" 
+            formControlName="metadata.author" 
+            class="form-control"
+            placeholder="例: 人事部"
+          >
+        </div>
+        <div class="form-group">
+          <label for="survey-version">バージョン番号</label>
+          <input 
+            type="text" 
+            id="survey-version" 
+            formControlName="metadata.version" 
+            class="form-control"
+            placeholder="例: 1.0"
+          >
+        </div>
+      </div>
+    </div>
+
+    <!-- セクション -->
+    <div class="form-section">
+      <div class="section-header">
+        <h2>セクション</h2>
+        <button type="button" class="btn btn-outline btn-sm" (click)="addSection()">
+          + セクション追加
+        </button>
+      </div>
+
+      <div formArrayName="sections" class="sections-container">
+        <div 
+          *ngFor="let section of sections.controls; let sectionIndex = index" 
+          [formGroupName]="sectionIndex"
+          class="section-item"
+        >
+          <div class="section-header">
+            <h3>セクション {{ sectionIndex + 1 }}</h3>
+            <button 
+              type="button" 
+              class="btn btn-danger btn-sm" 
+              (click)="removeSection(sectionIndex)"
+            >
+              削除
+            </button>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>セクションID *</label>
+              <input 
+                type="text" 
+                formControlName="id" 
+                class="form-control"
+                [class.error]="section.get('id')?.invalid && section.get('id')?.touched"
+                placeholder="例: basic-info"
+              >
+              <div class="error-message" *ngIf="section.get('id')?.invalid && section.get('id')?.touched">
+                セクションIDは必須です
+              </div>
+            </div>
+            <div class="form-group">
+              <label>セクションタイトル *</label>
+              <input 
+                type="text" 
+                formControlName="title" 
+                class="form-control"
+                [class.error]="section.get('title')?.invalid && section.get('title')?.touched"
+                placeholder="例: 基本情報"
+              >
+              <div class="error-message" *ngIf="section.get('title')?.invalid && section.get('title')?.touched">
+                セクションタイトルは必須です
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>セクション説明</label>
+            <textarea 
+              formControlName="description" 
+              class="form-control"
+              rows="2"
+              placeholder="セクションの説明を入力してください"
+            ></textarea>
+          </div>
+
+          <!-- 質問 -->
+          <div class="questions-container">
+            <div class="questions-header">
+              <h4>質問</h4>
+              <button 
+                type="button" 
+                class="btn btn-outline btn-sm" 
+                (click)="addQuestion(sectionIndex)"
+              >
+                + 質問追加
+              </button>
+            </div>
+
+            <div formArrayName="questions" class="questions-list">
+              <div 
+                *ngFor="let question of getQuestions(sectionIndex).controls; let questionIndex = index" 
+                [formGroupName]="questionIndex"
+                class="question-item"
+              >
+                <div class="question-header">
+                  <h5>質問 {{ questionIndex + 1 }}</h5>
+                  <button 
+                    type="button" 
+                    class="btn btn-danger btn-sm" 
+                    (click)="removeQuestion(sectionIndex, questionIndex)"
+                  >
+                    削除
+                  </button>
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>質問ID *</label>
+                    <input 
+                      type="text" 
+                      formControlName="id" 
+                      class="form-control"
+                      [class.error]="question.get('id')?.invalid && question.get('id')?.touched"
+                      placeholder="例: department"
+                    >
+                    <div class="error-message" *ngIf="question.get('id')?.invalid && question.get('id')?.touched">
+                      質問IDは必須です
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>質問タイプ *</label>
+                    <select 
+                      formControlName="type" 
+                      class="form-control"
+                      (change)="onQuestionTypeChange(sectionIndex, questionIndex, $event)"
+                    >
+                      <option *ngFor="let type of getQuestionTypes()" [value]="type">
+                        {{ type }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>質問ラベル *</label>
+                  <input 
+                    type="text" 
+                    formControlName="label" 
+                    class="form-control"
+                    [class.error]="question.get('label')?.invalid && question.get('label')?.touched"
+                    placeholder="例: 所属部署"
+                  >
+                  <div class="error-message" *ngIf="question.get('label')?.invalid && question.get('label')?.touched">
+                    質問ラベルは必須です
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>
+                    <input 
+                      type="checkbox" 
+                      formControlName="required"
+                    >
+                    必須項目
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <label>プレースホルダー</label>
+                  <input 
+                    type="text" 
+                    formControlName="placeholder" 
+                    class="form-control"
+                    placeholder="例: 年数を入力してください"
+                  >
+                </div>
+
+                <!-- 選択肢（select, radio, checkboxの場合） -->
+                <div 
+                  *ngIf="['select', 'radio', 'checkbox'].includes(question.get('type')?.value)"
+                  class="options-container"
+                >
+                  <div class="options-header">
+                    <label>選択肢</label>
+                    <button 
+                      type="button" 
+                      class="btn btn-outline btn-sm" 
+                      (click)="addOption(sectionIndex, questionIndex)"
+                    >
+                      + 選択肢追加
+                    </button>
+                  </div>
+                  <div formArrayName="options" class="options-list">
+                    <div 
+                      *ngFor="let option of getOptions(sectionIndex, questionIndex).controls; let optionIndex = index" 
+                      [formGroupName]="optionIndex"
+                      class="option-item"
+                    >
+                      <input 
+                        type="text" 
+                        [formControlName]="optionIndex" 
+                        class="form-control"
+                        placeholder="選択肢を入力"
+                      >
+                      <button 
+                        type="button" 
+                        class="btn btn-danger btn-sm" 
+                        (click)="removeOption(sectionIndex, questionIndex, optionIndex)"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- バリデーション（numberの場合） -->
+                <div 
+                  *ngIf="question.get('type')?.value === 'number'"
+                  class="validation-container"
+                >
+                  <h6>バリデーション</h6>
+                  <div formGroupName="validation" class="form-row">
+                    <div class="form-group">
+                      <label>最小値</label>
+                      <input 
+                        type="number" 
+                        formControlName="min" 
+                        class="form-control"
+                        placeholder="例: 0"
+                      >
+                    </div>
+                    <div class="form-group">
+                      <label>最大値</label>
+                      <input 
+                        type="number" 
+                        formControlName="max" 
+                        class="form-control"
+                        placeholder="例: 100"
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
