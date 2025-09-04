@@ -1,6 +1,6 @@
 # Survey & Workflow Application
 
-Angular Direct Componentを用いてXMLデータから動的にアンケートUIを生成する機能や、ワークフローに応じた文書回覧、データ統計の閲覧機能などを実装したアプリケーションです。
+Angular 20のStandalone Componentsを使用してXMLデータから動的にアンケートUIを生成する機能や、ワークフローに応じた文書回覧、データ統計の閲覧機能などを実装したアプリケーションです。
 
 ## 🚀 主要機能
 
@@ -32,13 +32,14 @@ Angular Direct Componentを用いてXMLデータから動的にアンケートUI
 
 ## 🛠️ 技術スタック
 
-- **フレームワーク**: Angular 17
-- **言語**: TypeScript
-- **UIライブラリ**: Angular Material
+- **フレームワーク**: Angular 20
+- **言語**: TypeScript 5.8
+- **UIライブラリ**: Angular Material 20
 - **フォーム**: Reactive Forms
-- **グラフ**: Chart.js
+- **グラフ**: Chart.js 4.5 + ng2-charts
 - **スタイル**: SCSS
 - **アーキテクチャ**: Standalone Components
+- **CDK**: Angular CDK 20
 
 ## 📁 プロジェクト構造
 
@@ -46,22 +47,31 @@ Angular Direct Componentを用いてXMLデータから動的にアンケートUI
 src/
 ├── app/
 │   ├── components/
-│   │   └── dynamic-survey.component.ts    # 動的アンケートコンポーネント
+│   │   ├── dynamic-survey.component.*     # 動的アンケートコンポーネント
+│   │   ├── confirm-dialog.component.ts    # 確認ダイアログ
+│   │   ├── survey-preview-dialog.component.ts  # アンケートプレビュー
+│   │   ├── workflow-comment-dialog.component.ts  # ワークフローコメント
+│   │   ├── workflow-detail-dialog.component.ts  # ワークフロー詳細
+│   │   └── workflow-document-dialog.component.ts  # ワークフロー文書
 │   ├── models/
 │   │   └── survey.model.ts                # データモデル定義
 │   ├── pages/
-│   │   ├── dashboard/
-│   │   │   └── dashboard.component.ts     # ダッシュボード
-│   │   ├── survey/
-│   │   │   └── survey.component.ts        # アンケート管理
-│   │   ├── workflow/
-│   │   │   └── workflow.component.ts      # ワークフロー管理
-│   │   └── statistics/
-│   │       └── statistics.component.ts    # 統計・分析
+│   │   ├── dashboard/                     # ダッシュボード
+│   │   ├── about/                         # アプリケーション情報
+│   │   ├── survey/                        # アンケート管理
+│   │   ├── survey-editor/                 # アンケートエディター
+│   │   ├── workflow/                      # ワークフロー管理
+│   │   └── statistics/                    # 統計・分析
 │   ├── services/
-│   │   └── xml-parser.service.ts          # XMLパーサーサービス
+│   │   ├── xml-parser.service.ts          # XMLパーサーサービス
+│   │   ├── survey-editor.service.ts       # アンケートエディターサービス
+│   │   ├── survey-file.service.ts         # アンケートファイルサービス
+│   │   ├── survey-storage.service.ts      # アンケートストレージサービス
+│   │   └── workflow.service.ts            # ワークフローサービス
 │   ├── app.config.ts                      # アプリケーション設定
 │   ├── app.routes.ts                      # ルーティング設定
+│   ├── app.html                           # メインテンプレート
+│   ├── app.scss                           # メインスタイル
 │   └── app.ts                             # メインコンポーネント
 ├── assets/
 │   └── data/
@@ -73,7 +83,7 @@ src/
 
 ### 前提条件
 - Node.js (v18以上)
-- Angular CLI
+- Angular CLI 20
 
 ### インストール
 ```bash
@@ -117,27 +127,62 @@ ng build --configuration development
 
 ## 📊 サンプルXML形式
 
+実際のサンプルファイル（`src/assets/data/sample-survey.xml`）の例：
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<survey id="sample-survey">
-  <title>サンプルアンケート</title>
-  <description>アンケートの説明</description>
+<survey id="employee-satisfaction-2024">
+  <title>従業員満足度調査 2024</title>
+  <description>職場環境と業務満足度に関する調査です。率直なご意見をお聞かせください。</description>
+  <metadata>
+    <created>2024-01-15</created>
+    <version>1.0</version>
+    <author>人事部</author>
+  </metadata>
   
-  <section id="section-1">
-    <title>セクションタイトル</title>
-    <description>セクションの説明</description>
+  <section id="basic-info">
+    <title>基本情報</title>
+    <description>まずは基本的な情報をお聞かせください。</description>
     
-    <question id="q1" type="text" required="true">
-      <label>質問ラベル</label>
-      <placeholder>プレースホルダーテキスト</placeholder>
+    <question id="department" type="select" required="true">
+      <label>所属部署</label>
+      <options>
+        <option>営業部</option>
+        <option>開発部</option>
+        <option>人事部</option>
+        <option>経理部</option>
+        <option>その他</option>
+      </options>
     </question>
     
-    <question id="q2" type="radio" required="true">
-      <label>選択肢の質問</label>
+    <question id="years" type="number" required="true">
+      <label>勤続年数</label>
+      <placeholder>年数を入力してください</placeholder>
+      <validation>
+        <min>0</min>
+        <max>50</max>
+      </validation>
+    </question>
+  </section>
+  
+  <section id="work-environment">
+    <title>職場環境</title>
+    <description>職場環境について評価してください。</description>
+    
+    <question id="workplace-satisfaction" type="radio" required="true">
+      <label>職場環境の満足度</label>
       <options>
-        <option>選択肢1</option>
-        <option>選択肢2</option>
+        <option>非常に満足</option>
+        <option>満足</option>
+        <option>普通</option>
+        <option>不満</option>
+        <option>非常に不満</option>
       </options>
+    </question>
+    
+    <question id="improvements" type="textarea" required="false">
+      <label>職場環境の改善点</label>
+      <placeholder>具体的な改善提案があればお聞かせください</placeholder>
     </question>
   </section>
 </survey>
@@ -146,19 +191,47 @@ ng build --configuration development
 ## 🔧 カスタマイズ
 
 ### 新しい質問タイプの追加
-1. `survey.model.ts`で質問タイプを定義
-2. `dynamic-survey.component.ts`でUIコンポーネントを実装
-3. バリデーションルールを追加
+1. `src/app/models/survey.model.ts`で質問タイプを定義
+2. `src/app/components/dynamic-survey.component.ts`でUIコンポーネントを実装
+3. `src/app/services/xml-parser.service.ts`でパーサーを拡張
+4. バリデーションルールを追加
 
 ### ワークフローの拡張
-1. 新しいステータスを追加
-2. 承認ルールをカスタマイズ
-3. 通知機能を実装
+1. `src/app/models/survey.model.ts`で新しいステータスを追加
+2. `src/app/services/workflow.service.ts`で承認ルールをカスタマイズ
+3. `src/app/components/workflow-*.component.ts`で通知機能を実装
 
 ### 統計機能の拡張
-1. 新しいメトリクスを追加
-2. グラフの種類を増やす
-3. エクスポート機能を実装
+1. `src/app/pages/statistics/`で新しいメトリクスを追加
+2. Chart.jsの設定でグラフの種類を増やす
+3. `src/app/services/survey-storage.service.ts`でエクスポート機能を実装
+
+### アンケートエディターの拡張
+1. `src/app/pages/survey-editor/`でビジュアルエディター機能を追加
+2. `src/app/services/survey-editor.service.ts`で編集機能を拡張
+3. リアルタイムプレビュー機能の実装
+
+## 🎯 アプリケーションの特徴
+
+### 動的UI生成
+- XML定義に基づく完全に動的なアンケートUI生成
+- リアルタイムバリデーション
+- レスポンシブデザイン対応
+
+### ワークフロー管理
+- 段階的承認プロセス
+- コメント機能付きレビューシステム
+- 進捗状況の可視化
+
+### データ分析
+- リアルタイム統計表示
+- インタラクティブなグラフ
+- エクスポート機能
+
+### モダンなアーキテクチャ
+- Angular 20の最新機能を活用
+- Standalone Componentsによる軽量な構造
+- TypeScriptによる型安全性
 
 ## 📝 ライセンス
 
