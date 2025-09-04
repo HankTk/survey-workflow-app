@@ -161,6 +161,38 @@
       width: 36px;
       height: 36px;
       min-width: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+      }
+
+      // 複製ボタン（緑色）
+      &:first-child {
+        mat-icon {
+          color: #4caf50;
+        }
+        
+        &:hover {
+          background-color: rgba(76, 175, 80, 0.1);
+        }
+      }
+
+      // 削除ボタン（赤色）
+      &:last-child {
+        mat-icon {
+          color: #f44336;
+        }
+        
+        &:hover {
+          background-color: rgba(244, 67, 54, 0.1);
+        }
+      }
 
       &.disabled {
         opacity: 0.5;

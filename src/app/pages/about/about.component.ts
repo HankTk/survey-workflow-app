@@ -148,24 +148,6 @@ import { Router } from '@angular/router';
         </mat-card>
       </div>
 
-      <!-- ナビゲーション -->
-      <div class="navigation-section">
-        <mat-card>
-          <mat-card-content>
-            <div class="nav-buttons">
-              <button mat-raised-button color="primary" (click)="navigateTo('/dashboard')">
-                🏠 ダッシュボードに戻る
-              </button>
-              <button mat-raised-button color="accent" (click)="navigateTo('/survey')">
-                📋 アンケート管理
-              </button>
-              <button mat-raised-button color="accent" (click)="navigateTo('/survey-editor')">
-                ✏️ アンケート編集
-              </button>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
     </div>
   `,
   styles: [`
@@ -203,8 +185,7 @@ import { Router } from '@angular/router';
 
     .features-section,
     .technology-section,
-    .getting-started-section,
-    .navigation-section {
+    .getting-started-section {
       margin-bottom: 30px;
     }
 
@@ -322,17 +303,6 @@ import { Router } from '@angular/router';
       line-height: 1.5;
     }
 
-    .nav-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .nav-buttons button {
-      min-width: 200px;
-      height: 48px;
-    }
 
     @media (max-width: 768px) {
       .about-page {
@@ -345,15 +315,6 @@ import { Router } from '@angular/router';
         grid-template-columns: 1fr;
       }
 
-      .nav-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .nav-buttons button {
-        width: 100%;
-        max-width: 300px;
-      }
     }
   `]
 })
