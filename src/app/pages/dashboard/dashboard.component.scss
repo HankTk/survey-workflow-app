@@ -37,7 +37,7 @@
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   max-width: 1200px;
   margin: 0 auto;
@@ -194,6 +194,13 @@
   line-height: 1.5;
 }
 
+@media (max-width: 1024px) {
+  .actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
 @media (max-width: 768px) {
   .dashboard-page {
     padding: 16px 16px 40px 16px;
@@ -233,172 +240,5 @@
   
   .action-card h3 {
     font-size: 1.2em;
-  }
-}
-
-// 保存されたサーベイ一覧のスタイル
-.saved-surveys {
-  margin-bottom: 40px;
-}
-
-.surveys-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.survey-card {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border-color: #1976d2;
-  }
-}
-
-.survey-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-
-  h4 {
-    margin: 0;
-    color: #1976d2;
-    font-size: 1.2em;
-    font-weight: 600;
-    flex: 1;
-    margin-right: 10px;
-  }
-}
-
-.survey-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-
-  .survey-card:hover & {
-    opacity: 1;
-  }
-}
-
-.action-btn {
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-
-  &.delete-btn {
-    color: #dc3545;
-
-    &:hover {
-      background-color: rgba(220, 53, 69, 0.1);
-    }
-  }
-
-  &:not(.delete-btn):hover {
-    background-color: rgba(25, 118, 210, 0.1);
-  }
-}
-
-.survey-description {
-  color: #666;
-  font-size: 0.9em;
-  line-height: 1.4;
-  margin: 0 0 15px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.survey-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-
-  span {
-    background: #f8f9fa;
-    color: #495057;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.8em;
-    font-weight: 500;
-  }
-}
-
-.survey-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.8em;
-  color: #6c757d;
-  border-top: 1px solid #e9ecef;
-  padding-top: 12px;
-}
-
-.survey-author {
-  font-weight: 500;
-}
-
-.survey-version {
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: 600;
-}
-
-.loading-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 40px;
-  color: #6c757d;
-
-  mat-icon {
-    animation: spin 1s linear infinite;
-  }
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-// レスポンシブ対応
-@media (max-width: 768px) {
-  .surveys-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .survey-card {
-    padding: 16px;
-  }
-
-  .survey-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-
-    h4 {
-      margin-right: 0;
-    }
-  }
-
-  .survey-actions {
-    opacity: 1; // モバイルでは常に表示
-    align-self: flex-end;
   }
 }

@@ -1,6 +1,6 @@
 <div class="survey-editor-container">
   <div class="header">
-    <h1>{{ isEditing ? 'サーベイ編集' : '新規サーベイ作成' }}</h1>
+    <h1>{{ isEditing ? 'アンケート編集' : '新規アンケート作成' }}</h1>
     <div class="header-actions">
       <button type="button" class="btn btn-secondary" (click)="previewSurvey()" [disabled]="!surveyForm.valid">
         プレビュー
@@ -109,13 +109,13 @@
         ></textarea>
       </div>
 
-      <div class="form-row">
+      <div formGroupName="metadata" class="form-row">
         <div class="form-group">
           <label for="survey-author">作成者</label>
           <input 
             type="text" 
             id="survey-author" 
-            formControlName="metadata.author" 
+            formControlName="author" 
             class="form-control"
             placeholder="例: 人事部"
           >
@@ -125,7 +125,7 @@
           <input 
             type="text" 
             id="survey-version" 
-            formControlName="metadata.version" 
+            formControlName="version" 
             class="form-control"
             placeholder="例: 1.0"
           >

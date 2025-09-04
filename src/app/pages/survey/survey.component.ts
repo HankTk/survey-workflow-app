@@ -1,256 +1,189 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialog } from '@angular/material/dialog';
 
-import { DynamicSurveyComponent } from '../../components/dynamic-survey.component';
-import { XmlParserService } from '../../services/xml-parser.service';
-import { SurveyStorageService } from '../../services/survey-storage.service';
 import { SurveyFileService } from '../../services/survey-file.service';
-import { Survey, SurveyResponse } from '../../models/survey.model';
+import { SurveyEditorService } from '../../services/survey-editor.service';
+import { Survey } from '../../models/survey.model';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog.component';
 
 @Component({
   selector: 'app-survey',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     MatCardModule,
     MatButtonModule,
+    MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MatTabsModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    DynamicSurveyComponent
+    MatSnackBarModule
   ],
   templateUrl: './survey.component.html',
   styleUrl: './survey.component.scss'
 })
 export class SurveyComponent implements OnInit {
 
-  private http = inject(HttpClient);
-  private xmlParser = inject(XmlParserService);
-  private surveyStorage = inject(SurveyStorageService);
   private surveyFileService = inject(SurveyFileService);
+  private surveyEditorService = inject(SurveyEditorService);
   private snackBar = inject(MatSnackBar);
+  private dialog = inject(MatDialog);
+  private router = inject(Router);
 
-  survey: Survey | null = null;
+  surveys: Survey[] = [];
   isLoading = false;
-  error: string | null = null;
-  submittedResponses: SurveyResponse[] = [];
-  availableSurveys: string[] = [];
-  selectedSurveyId: string = '';
 
-  ngOnInit()
-  {
-    // 保存された回答を読み込み
-    const rawResponses = this.surveyStorage.getAllResponses();
-    this.submittedResponses = this.convertLegacyResponses(rawResponses);
-    
-    // 利用可能なサーベイ一覧を読み込み
-    this.loadAvailableSurveys();
+  ngOnInit() {
+    this.loadSurveys();
   }
 
-  loadSampleSurvey()
-  {
+  /**
+   * 保存されたアンケート一覧を読み込み
+   */
+  loadSurveys(): void {
     this.isLoading = true;
-    this.error = null;
-
-    this.http.get('assets/data/sample-survey.xml', { responseType: 'text' }).subscribe({
-      next: (xmlData) =>
-      {
-        if (xmlData)
-        {
-          this.survey = this.xmlParser.parseSurveyXml(xmlData);
-          
-          if (this.survey)
-          {
-            this.snackBar.open('アンケートが正常に読み込まれました', '閉じる', { duration: 3000 });
-            console.log('Loaded survey:', this.survey);
-          }
-          else
-          {
-            this.error = 'XMLデータの解析に失敗しました';
-          }
-        }
-        else
-        {
-          this.error = 'XMLファイルの読み込みに失敗しました';
-        }
+    
+    // SurveyEditorServiceからアンケートを取得
+    this.surveyEditorService.getAllSurveys().subscribe({
+      next: (surveys) => {
+        // サンプルアンケートを先頭に追加
+        const sampleSurvey = this.surveyEditorService.getSampleSurvey();
+        this.surveys = [sampleSurvey, ...surveys];
         this.isLoading = false;
       },
-      error: (err) =>
-      {
-        this.error = 'エラーが発生しました: ' + err.message;
+      error: (error) => {
+        console.error('アンケート読み込みエラー:', error);
+        this.snackBar.open('アンケートの読み込みに失敗しました', '閉じる', { duration: 3000 });
         this.isLoading = false;
-        console.error('Error loading survey:', err);
       }
     });
   }
 
-  clearSurvey()
-  {
-    this.survey = null;
-    this.error = null;
-    this.snackBar.open('アンケートがクリアされました', '閉じる', { duration: 2000 });
+  /**
+   * 新規アンケート作成
+   */
+  createNewSurvey(): void {
+    this.router.navigate(['/survey-editor']);
   }
 
-  onSurveySubmitted(response: SurveyResponse)
-  {
-    // ローカルストレージに保存
-    this.surveyStorage.saveResponse(response);
+  /**
+   * アンケートを編集
+   */
+  editSurvey(surveyId: string): void {
+    this.router.navigate(['/survey-editor'], { queryParams: { id: surveyId } });
+  }
+
+  /**
+   * アンケートを複製
+   */
+  duplicateSurvey(surveyId: string, event: Event): void {
+    event.stopPropagation();
     
-    // 表示用の配列を更新
-    this.submittedResponses = this.surveyStorage.getAllResponses();
-    
-    this.snackBar.open('アンケートが送信されました', '閉じる', { duration: 3000 });
-    console.log('Survey submitted and saved:', response);
-  }
-
-  deleteResponse(index: number)
-  {
-    this.surveyStorage.deleteResponse(index);
-    this.submittedResponses = this.surveyStorage.getAllResponses();
-    this.snackBar.open('回答を削除しました', '閉じる', { duration: 2000 });
-  }
-
-  clearAllResponses()
-  {
-    if (confirm('すべての回答を削除しますか？この操作は元に戻せません。'))
-    {
-      this.surveyStorage.clearAllResponses();
-      this.submittedResponses = [];
-      this.snackBar.open('すべての回答を削除しました', '閉じる', { duration: 2000 });
+    // サンプルアンケートの場合は特別な処理
+    if (this.isSampleSurvey(surveyId)) {
+      const sampleSurvey = this.surveyEditorService.getSampleSurvey();
+      const newId = `sample-copy-${Date.now()}`;
+      const duplicatedSurvey = {
+        ...sampleSurvey,
+        id: newId,
+        title: `${sampleSurvey.title} (コピー)`,
+        metadata: {
+          created: new Date().toISOString().split('T')[0],
+          version: '1.0',
+          author: sampleSurvey.metadata?.author || 'Unknown'
+        }
+      };
+      
+      this.surveyEditorService.createSurvey(duplicatedSurvey).subscribe({
+        next: () => {
+          this.loadSurveys();
+          this.snackBar.open('サンプルアンケートを複製しました', '閉じる', { duration: 3000 });
+        },
+        error: (error) => {
+          console.error('サンプルアンケートの複製に失敗しました:', error);
+          this.snackBar.open('サンプルアンケートの複製に失敗しました', '閉じる', { duration: 3000 });
+        }
+      });
+      return;
     }
+    
+    const newId = `${surveyId}-copy-${Date.now()}`;
+    this.surveyEditorService.duplicateSurvey(surveyId, newId).subscribe({
+      next: (duplicatedSurvey) => {
+        this.loadSurveys();
+        this.snackBar.open('アンケートを複製しました', '閉じる', { duration: 3000 });
+      },
+      error: (error) => {
+        console.error('アンケートの複製に失敗しました:', error);
+        this.snackBar.open('アンケートの複製に失敗しました', '閉じる', { duration: 3000 });
+      }
+    });
   }
 
-  // 既存の回答データを新しい形式に変換（後方互換性のため）
-  private convertLegacyResponses(responses: any[]): any[]
-  {
-    return responses.map(response => ({
-      ...response,
-      responses: response.responses.map((item: any) => ({
-        ...item,
-        questionLabel: item.questionLabel || this.getQuestionLabelFromId(item.questionId)
-      }))
-    }));
-  }
-
-  private getQuestionLabelFromId(questionId: string): string
-  {
-    // 質問IDから日本語ラベルへのマッピング
-    const labelMap: { [key: string]: string } = {
-      'department': '所属部署',
-      'years': '勤続年数',
-      'workplace-satisfaction': '職場環境の満足度',
-      'work-life-balance': 'ワークライフバランスの満足度',
-      'improvements': '職場環境の改善点',
-      'job-interest': '業務への興味・関心',
-      'growth-opportunity': '成長機会の充足度',
-      'future-plans': '今後のキャリアプラン'
+  /**
+   * アンケートを削除
+   */
+  deleteSurvey(surveyId: string, event: Event): void {
+    event.stopPropagation();
+    
+    // サンプルアンケートは削除不可
+    if (this.isSampleSurvey(surveyId)) {
+      this.snackBar.open('サンプルアンケートは削除できません', '閉じる', { duration: 3000 });
+      return;
+    }
+    
+    const survey = this.surveys.find(s => s.id === surveyId);
+    const surveyTitle = survey?.title || surveyId;
+    
+    const dialogData: ConfirmDialogData = {
+      title: 'アンケートの削除',
+      message: `アンケート「${surveyTitle}」を削除しますか？\n\nこの操作は取り消せません。`,
+      confirmText: '削除',
+      cancelText: 'キャンセル',
+      isDestructive: true
     };
-    return labelMap[questionId] || questionId;
-  }
 
-  /**
-   * 利用可能なサーベイ一覧を読み込み
-   */
-  loadAvailableSurveys(): void {
-    // ローカルストレージに保存されたXMLサーベイを取得
-    const localSurveys = this.surveyFileService.getLocalStorageSurveyList();
-    
-    // サンプルサーベイも追加
-    this.availableSurveys = ['sample-survey.xml', ...localSurveys];
-  }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      maxWidth: '90vw',
+      data: dialogData,
+      disableClose: false,
+      autoFocus: true
+    });
 
-  /**
-   * 選択されたサーベイを読み込み
-   */
-  loadSelectedSurvey(): void {
-    if (!this.selectedSurveyId) {
-      this.error = 'サーベイを選択してください';
-      return;
-    }
-
-    this.isLoading = true;
-    this.error = null;
-
-    if (this.selectedSurveyId === 'sample-survey.xml') {
-      // サンプルサーベイを読み込み
-      this.loadSampleSurvey();
-    } else {
-      // ローカルストレージからXMLサーベイを読み込み
-      const survey = this.surveyFileService.loadSurveyFromLocalStorage(this.selectedSurveyId);
-      if (survey) {
-        this.survey = survey;
-        this.snackBar.open('サーベイが正常に読み込まれました', '閉じる', { duration: 3000 });
-        console.log('Loaded survey from localStorage:', survey);
-      } else {
-        this.error = 'サーベイの読み込みに失敗しました';
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.surveyEditorService.deleteSurvey(surveyId).subscribe({
+          next: () => {
+            this.loadSurveys();
+            this.snackBar.open('アンケートを削除しました', '閉じる', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('アンケートの削除に失敗しました:', error);
+            this.snackBar.open('アンケートの削除に失敗しました', '閉じる', { duration: 3000 });
+          }
+        });
       }
-      this.isLoading = false;
-    }
+    });
   }
 
   /**
-   * サーベイ選択が変更されたとき
+   * アンケートの総質問数を取得
    */
-  onSurveySelectionChange(): void {
-    this.survey = null;
-    this.error = null;
+  getTotalQuestions(survey: Survey): number {
+    return survey.sections.reduce((total, section) => total + section.questions.length, 0);
   }
 
   /**
-   * 選択されたサーベイを削除
+   * サンプルアンケートかどうかを判定
    */
-  deleteSelectedSurvey(): void {
-    if (!this.selectedSurveyId || this.selectedSurveyId === 'sample-survey.xml') {
-      this.snackBar.open('サンプルサーベイは削除できません', '閉じる', { duration: 3000 });
-      return;
-    }
-
-    const confirmMessage = `サーベイ「${this.selectedSurveyId}」を削除しますか？\nこの操作は取り消せません。`;
-    if (confirm(confirmMessage)) {
-      const deleted = this.surveyFileService.deleteSurveyFromLocalStorage(this.selectedSurveyId);
-      if (deleted) {
-        this.snackBar.open('サーベイが削除されました', '閉じる', { duration: 3000 });
-        this.loadAvailableSurveys();
-        this.selectedSurveyId = '';
-        this.survey = null;
-        this.error = null;
-      } else {
-        this.snackBar.open('サーベイの削除に失敗しました', '閉じる', { duration: 3000 });
-      }
-    }
-  }
-
-  /**
-   * すべてのXMLサーベイを削除
-   */
-  deleteAllSurveys(): void {
-    const localSurveys = this.surveyFileService.getLocalStorageSurveyList();
-    if (localSurveys.length === 0) {
-      this.snackBar.open('削除するサーベイがありません', '閉じる', { duration: 3000 });
-      return;
-    }
-
-    const confirmMessage = `すべてのXMLサーベイ（${localSurveys.length}個）を削除しますか？\nこの操作は取り消せません。`;
-    if (confirm(confirmMessage)) {
-      const deletedCount = this.surveyFileService.clearAllSurveysFromLocalStorage();
-      this.snackBar.open(`${deletedCount}個のサーベイが削除されました`, '閉じる', { duration: 3000 });
-      this.loadAvailableSurveys();
-      this.selectedSurveyId = '';
-      this.survey = null;
-      this.error = null;
-    }
+  isSampleSurvey(surveyId: string): boolean {
+    return surveyId === 'employee-satisfaction-2024';
   }
 
 }

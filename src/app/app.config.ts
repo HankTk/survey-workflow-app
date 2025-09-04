@@ -4,6 +4,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideHttpClient } from '@angular/common/http';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { provideZoneChangeDetection } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 import { routes } from './app.routes';
 
@@ -13,6 +14,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideHttpClient(),
     provideNativeDateAdapter(),
-    provideZoneChangeDetection()
+    provideZoneChangeDetection(),
+    importProvidersFrom(MatIconModule)
   ]
 };

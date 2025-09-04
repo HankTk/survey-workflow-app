@@ -1,104 +1,83 @@
 <div class="survey-page">
-  <mat-card class="page-header">
-    <mat-card-header>
-      <mat-card-title>アンケート管理</mat-card-title>
-      <mat-card-subtitle>XMLデータから動的にアンケートUIを生成</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <p>利用可能なアンケートから選択して読み込むか、サンプルアンケートを読み込みます。</p>
-      
-      <div class="survey-selection">
-        <mat-form-field appearance="outline" class="survey-select">
-          <mat-label>アンケートを選択</mat-label>
-          <mat-select 
-            [(ngModel)]="selectedSurveyId" 
-            (selectionChange)="onSurveySelectionChange()"
-            placeholder="アンケートを選択してください">
-            <mat-option *ngFor="let surveyId of availableSurveys" [value]="surveyId">
-              {{ surveyId === 'sample-survey.xml' ? 'サンプルアンケート' : surveyId }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <button mat-raised-button 
-                color="primary" 
-                (click)="loadSelectedSurvey()"
-                [disabled]="isLoading || !selectedSurveyId">
-          {{ isLoading ? '読み込み中...' : '選択したアンケートを読み込み' }}
-        </button>
-      </div>
-    </mat-card-content>
-    <mat-card-actions>
-      <button mat-button 
-              (click)="clearSurvey()"
-              [disabled]="!survey">
-        クリア
-      </button>
-      <button mat-button 
-              (click)="loadAvailableSurveys()"
-              color="accent">
-        一覧を更新
-      </button>
-      <button mat-button 
-              (click)="deleteSelectedSurvey()"
-              color="warn"
-              [disabled]="!selectedSurveyId || selectedSurveyId === 'sample-survey.xml'">
-        🗑️ 選択したサーベイを削除
-      </button>
-      <button mat-button 
-              (click)="deleteAllSurveys()"
-              color="warn">
-        🗑️ すべてのサーベイを削除
-      </button>
-    </mat-card-actions>
-  </mat-card>
+  <div class="page-header">
+    <h1>アンケート管理</h1>
+    <p>作成・編集したアンケートの一覧と管理を行います</p>
+  </div>
 
+  <!-- 新規作成ボタン -->
+  <div class="header-actions">
+    <button 
+      mat-raised-button 
+      color="primary" 
+      (click)="createNewSurvey()"
+      class="new-survey-button"
+    >
+      <mat-icon class="button-icon">add</mat-icon> 新規アンケート作成
+    </button>
+  </div>
+
+  <!-- ローディング表示 -->
   <div *ngIf="isLoading" class="loading-container">
-    <mat-spinner></mat-spinner>
+    <mat-spinner diameter="50"></mat-spinner>
     <p>アンケートを読み込み中...</p>
   </div>
 
-  <div *ngIf="error" class="error-container">
-    <mat-card class="error-card">
-      <mat-card-content>
-        <h3>エラーが発生しました</h3>
-        <p>{{ error }}</p>
-      </mat-card-content>
-    </mat-card>
-  </div>
-
-  <div *ngIf="survey && !isLoading" class="survey-content">
-    <app-dynamic-survey 
-      [survey]="survey"
-      (surveySubmitted)="onSurveySubmitted($event)">
-    </app-dynamic-survey>
-  </div>
-
-  <div *ngIf="submittedResponses.length > 0" class="responses-section">
+  <!-- アンケート一覧 -->
+  <div *ngIf="!isLoading" class="surveys-section">
     <mat-card>
       <mat-card-header>
-        <mat-card-title>送信された回答 ({{ submittedResponses.length }}件)</mat-card-title>
-        <mat-card-subtitle>これまでに送信されたアンケート回答</mat-card-subtitle>
+        <mat-card-title>保存されたアンケート</mat-card-title>
+        <mat-card-subtitle>作成・編集したアンケートの一覧</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="responses-actions">
-          <button mat-button color="warn" (click)="clearAllResponses()">
-            すべての回答を削除
-          </button>
-        </div>
-        <div *ngFor="let response of submittedResponses; let i = index" class="response-item">
-          <div class="response-header">
-            <h4>回答 {{ i + 1 }} - {{ response.submittedAt | date:'medium' }}</h4>
-            <button mat-icon-button color="warn" (click)="deleteResponse(i)" class="delete-button">
-              🗑️
-            </button>
-          </div>
-          <div class="response-details">
-            <div *ngFor="let item of response.responses" class="response-detail">
-              <strong>{{ item.questionLabel || item.questionId }}:</strong> {{ item.value }}
+        <div class="surveys-list" *ngIf="surveys.length > 0; else noSurveys">
+          <div 
+            *ngFor="let survey of surveys" 
+            class="survey-list-item"
+            (click)="editSurvey(survey.id)"
+          >
+            <div class="survey-info">
+              <h4>{{ survey.title }}</h4>
+              <p class="survey-description" *ngIf="survey.description">
+                {{ survey.description }}
+              </p>
+              <div class="survey-meta">
+                <span class="survey-id">識別子: {{ survey.id }}</span>
+                <span class="survey-sections">{{ survey.sections.length }} セクション</span>
+                <span class="survey-questions">{{ getTotalQuestions(survey) }} 質問</span>
+                <span class="survey-version" *ngIf="survey.metadata?.version">
+                  バージョン {{ survey.metadata?.version }}
+                </span>
+              </div>
+            </div>
+            <div class="survey-actions">
+              <button 
+                mat-icon-button 
+                (click)="duplicateSurvey(survey.id, $event)"
+                matTooltip="複製"
+                title="複製"
+              >
+                📋
+              </button>
+              <button 
+                mat-icon-button 
+                (click)="deleteSurvey(survey.id, $event)"
+                matTooltip="削除"
+                title="削除"
+                [disabled]="isSampleSurvey(survey.id)"
+                [class.disabled]="isSampleSurvey(survey.id)"
+              >
+                🗑️
+              </button>
             </div>
           </div>
         </div>
+        <ng-template #noSurveys>
+          <div class="no-surveys">
+            <p>保存されたアンケートがありません。</p>
+            <p>新しいアンケートを作成してください。</p>
+          </div>
+        </ng-template>
       </mat-card-content>
     </mat-card>
   </div>

@@ -17,7 +17,14 @@ export class SurveyEditorService {
   // ローカルストレージからサーベイを読み込み
   private loadSurveys(): void {
     const stored = localStorage.getItem(this.STORAGE_KEY);
-    const surveys = stored ? JSON.parse(stored) : [];
+    let surveys = stored ? JSON.parse(stored) : [];
+    
+    // データが存在しない場合はサンプルアンケートを作成
+    if (surveys.length === 0) {
+      surveys = [this.getSampleSurvey()];
+      this.saveSurveys(surveys);
+    }
+    
     this.surveysSubject.next(surveys);
   }
 
@@ -141,7 +148,7 @@ export class SurveyEditorService {
   }
 
   // サンプルサーベイを取得（デモ用）
-  private getSampleSurvey(): Survey {
+  getSampleSurvey(): Survey {
     return {
       id: 'employee-satisfaction-2024',
       title: '従業員満足度調査 2024',

@@ -2,14 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
 import { Survey, SurveySection, SurveyQuestion } from '../../models/survey.model';
 import { SurveyEditorService } from '../../services/survey-editor.service';
 import { SurveyFileService } from '../../services/survey-file.service';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog.component';
+import { SurveyPreviewDialogComponent, SurveyPreviewData } from '../../components/survey-preview-dialog.component';
 
 @Component({
   selector: 'app-survey-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatCardModule, MatButtonModule],
   templateUrl: './survey-editor.component.html',
   styleUrls: ['./survey-editor.component.scss']
 })
@@ -20,9 +25,11 @@ export class SurveyEditorComponent implements OnInit {
   isLoading = false;
   saveMessage = '';
 
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private dialog: MatDialog,
     private surveyEditorService: SurveyEditorService,
     private surveyFileService: SurveyFileService
   ) {
@@ -141,6 +148,18 @@ export class SurveyEditorComponent implements OnInit {
 
   loadSurveyForEdit(surveyId: string): void {
     this.isLoading = true;
+    
+    // まずSurveyFileServiceからXMLサーベイを試行
+    const xmlSurvey = this.surveyFileService.loadSurveyFromLocalStorage(surveyId);
+    if (xmlSurvey) {
+      this.currentSurvey = xmlSurvey;
+      this.isEditing = true;
+      this.populateForm(xmlSurvey);
+      this.isLoading = false;
+      return;
+    }
+    
+    // XMLサーベイが見つからない場合はSurveyEditorServiceから取得
     this.surveyEditorService.getSurvey(surveyId).subscribe({
       next: (survey) => {
         this.currentSurvey = survey;
@@ -223,13 +242,14 @@ export class SurveyEditorComponent implements OnInit {
       if (this.isEditing) {
         this.surveyEditorService.updateSurvey(survey).subscribe({
           next: () => {
-            this.saveMessage = `サーベイ「${survey.title}」が正常に更新されました`;
+            this.saveMessage = `アンケート「${survey.title}」が正常に更新されました`;
             this.isLoading = false;
+
             setTimeout(() => this.saveMessage = '', 3000);
           },
           error: (error) => {
-            console.error('サーベイの更新に失敗しました:', error);
-            this.saveMessage = 'サーベイの更新に失敗しました';
+            console.error('アンケートの更新に失敗しました:', error);
+            this.saveMessage = 'アンケートの更新に失敗しました';
             this.isLoading = false;
             setTimeout(() => this.saveMessage = '', 3000);
           }
@@ -237,13 +257,14 @@ export class SurveyEditorComponent implements OnInit {
       } else {
         this.surveyEditorService.createSurvey(survey).subscribe({
           next: () => {
-            this.saveMessage = `サーベイ「${survey.title}」が正常に作成されました`;
+            this.saveMessage = `アンケート「${survey.title}」が正常に作成されました`;
             this.isLoading = false;
+
             setTimeout(() => this.saveMessage = '', 3000);
           },
           error: (error) => {
-            console.error('サーベイの作成に失敗しました:', error);
-            this.saveMessage = 'サーベイの作成に失敗しました';
+            console.error('アンケートの作成に失敗しました:', error);
+            this.saveMessage = 'アンケートの作成に失敗しました';
             this.isLoading = false;
             setTimeout(() => this.saveMessage = '', 3000);
           }
@@ -273,8 +294,43 @@ export class SurveyEditorComponent implements OnInit {
 
   previewSurvey(): void {
     if (this.surveyForm.valid) {
-      // プレビューページに遷移（実装は後で追加）
-      console.log('プレビュー機能は今後実装予定です');
+      // フォームからSurveyオブジェクトを作成
+      const surveyData = this.surveyForm.value;
+      const survey: Survey = {
+        id: surveyData.id,
+        title: surveyData.title,
+        description: surveyData.description,
+        metadata: {
+          created: surveyData.metadata.created || new Date().toISOString().split('T')[0],
+          version: surveyData.metadata.version || '1.0',
+          author: surveyData.metadata.author || 'Unknown'
+        },
+        sections: surveyData.sections || []
+      };
+
+      // プレビューダイアログを開く
+      const dialogData: SurveyPreviewData = {
+        survey: survey
+      };
+
+      const dialogRef = this.dialog.open(SurveyPreviewDialogComponent, {
+        width: '800px',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        data: dialogData,
+        disableClose: false,
+        autoFocus: true
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          console.log('プレビュー送信結果:', result);
+        }
+      });
+    } else {
+      this.markFormGroupTouched(this.surveyForm);
+      this.saveMessage = 'プレビューを表示するには、フォームを正しく入力してください。';
+      setTimeout(() => this.saveMessage = '', 3000);
     }
   }
 
@@ -370,39 +426,106 @@ export class SurveyEditorComponent implements OnInit {
       return;
     }
 
-    const confirmMessage = `サーベイ「${this.currentSurvey.title}」を削除しますか？\nこの操作は取り消せません。`;
-    if (confirm(confirmMessage)) {
-      const deleted = this.surveyFileService.deleteSurveyFromLocalStorage(this.currentSurvey.id);
-      if (deleted) {
-        this.saveMessage = 'サーベイが削除されました';
+    const dialogData: ConfirmDialogData = {
+      title: 'サーベイの削除',
+      message: `サーベイ「${this.currentSurvey.title}」を削除しますか？\n\nこの操作は取り消せません。`,
+      confirmText: '削除',
+      cancelText: 'キャンセル',
+      isDestructive: true
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      maxWidth: '90vw',
+      data: dialogData,
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.performSurveyDeletion();
+      }
+    });
+  }
+
+  /**
+   * サーベイ削除の実行
+   */
+  private performSurveyDeletion(): void {
+    if (!this.currentSurvey) return;
+
+    // SurveyFileServiceからXMLサーベイを削除
+    const xmlDeleted = this.surveyFileService.deleteSurveyFromLocalStorage(this.currentSurvey.id);
+    
+    // SurveyEditorServiceからも削除
+    this.surveyEditorService.deleteSurvey(this.currentSurvey.id).subscribe({
+      next: () => {
+        this.saveMessage = 'アンケートが削除されました';
         this.currentSurvey = null;
         this.surveyForm.reset();
         this.isEditing = false;
+
         setTimeout(() => this.saveMessage = '', 3000);
-      } else {
+        
+        // ダッシュボードに戻る
+        setTimeout(() => {
+          this.router.navigate(['/dashboard']);
+        }, 2000);
+      },
+      error: (error) => {
+        console.error('サーベイの削除に失敗しました:', error);
         this.saveMessage = 'サーベイの削除に失敗しました';
         setTimeout(() => this.saveMessage = '', 3000);
       }
-    }
+    });
   }
 
   /**
    * すべてのXMLサーベイを削除
    */
   deleteAllSurveys(): void {
-    const confirmMessage = 'すべてのXMLサーベイを削除しますか？\nこの操作は取り消せません。';
-    if (confirm(confirmMessage)) {
-      const deletedCount = this.surveyFileService.clearAllSurveysFromLocalStorage();
-      this.saveMessage = `${deletedCount}個のサーベイが削除されました`;
-      this.currentSurvey = null;
-      this.surveyForm.reset();
-      this.isEditing = false;
-      setTimeout(() => this.saveMessage = '', 3000);
-    }
+    const dialogData: ConfirmDialogData = {
+      title: 'すべてのサーベイを削除',
+      message: 'すべてのXMLサーベイを削除しますか？\n\nこの操作は取り消せません。',
+      confirmText: 'すべて削除',
+      cancelText: 'キャンセル',
+      isDestructive: true
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '420px',
+      maxWidth: '90vw',
+      data: dialogData,
+      disableClose: false,
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const deletedCount = this.surveyFileService.clearAllSurveysFromLocalStorage();
+        this.saveMessage = `${deletedCount}個のアンケートが削除されました`;
+        this.currentSurvey = null;
+        this.surveyForm.reset();
+        this.isEditing = false;
+
+        setTimeout(() => this.saveMessage = '', 3000);
+      }
+    });
   }
 
   cancel(): void {
     this.router.navigate(['/dashboard']);
+  }
+
+  /**
+   * 新規アンケート作成画面を表示
+   */
+  createNewSurvey(): void {
+    this.isEditing = false;
+    this.currentSurvey = null;
+    this.surveyForm.reset();
+    this.surveyForm = this.createSurveyForm();
   }
 
   getQuestionTypes(): string[] {

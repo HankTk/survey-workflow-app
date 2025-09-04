@@ -2,7 +2,7 @@
   <div class="welcome-section">
     <mat-card class="welcome-card">
       <mat-card-content>
-        <h1>サーベイ・ワークフローアプリケーション</h1>
+        <h1>アンケート・ワークフローアプリケーション</h1>
         <p>XMLデータから動的にアンケートUIを生成し、ワークフロー管理とデータ分析を行う統合アプリケーション</p>
       </mat-card-content>
     </mat-card>
@@ -14,15 +14,7 @@
         <mat-card-content>
           <div class="action-icon">📋</div>
           <h3>アンケート管理</h3>
-          <p>XMLデータから動的UI生成</p>
-        </mat-card-content>
-      </mat-card>
-      
-      <mat-card class="action-card" (click)="navigateTo('/survey-editor')">
-        <mat-card-content>
-          <div class="action-icon">✏️</div>
-          <h3>サーベイ編集</h3>
-          <p>サーベイの作成・編集・保存</p>
+          <p>アンケートの一覧・作成・編集・実行</p>
         </mat-card-content>
       </mat-card>
       
@@ -44,180 +36,22 @@
     </div>
   </div>
 
-  <div class="features-overview">
+  <!-- アプリケーション情報へのリンク -->
+  <div class="app-info-section">
     <mat-card>
-      <mat-card-header>
-        <mat-card-title>主要機能</mat-card-title>
-        <mat-card-subtitle>アプリケーションの特徴と利点</mat-card-subtitle>
-      </mat-card-header>
       <mat-card-content>
-        <div class="features-grid">
-          <div class="feature-item">
-            <div class="feature-icon">🎯</div>
-            <h4>動的UI生成</h4>
-            <p>XMLデータを解析して、アンケートの質問形式やバリデーションルールに応じたUIを自動生成します。</p>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">📝</div>
-            <h4>柔軟な質問形式</h4>
-            <p>テキスト、数値、選択肢、チェックボックス、日付など、多様な質問タイプに対応しています。</p>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">✅</div>
-            <h4>バリデーション</h4>
-            <p>必須項目、数値範囲、正規表現パターンなど、XMLで定義された検証ルールを適用します。</p>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">🔄</div>
-            <h4>ワークフロー管理</h4>
-            <p>文書の承認フローを段階的に管理し、各ステップの進捗状況を可視化します。</p>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">📊</div>
-            <h4>データ分析</h4>
-            <p>アンケート回答とワークフローの統計情報を収集し、インサイトを提供します。</p>
-          </div>
-          
-          <div class="feature-item">
-            <div class="feature-icon">🎨</div>
-            <h4>モダンUI</h4>
-            <p>Angular Materialを使用した美しく使いやすいインターフェースを提供します。</p>
-          </div>
+        <div class="info-content">
+          <h3>アプリケーションについて</h3>
+          <p>主要機能、技術スタック、使い方の詳細情報をご覧いただけます。</p>
+          <button mat-raised-button color="primary" (click)="navigateTo('/about')">
+            📖 詳細情報を見る
+          </button>
         </div>
       </mat-card-content>
     </mat-card>
   </div>
 
-  <div class="technology-stack">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>技術スタック</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="tech-chips">
-          <mat-chip-set>
-            <mat-chip>Angular 17</mat-chip>
-            <mat-chip>TypeScript</mat-chip>
-            <mat-chip>Angular Material</mat-chip>
-            <mat-chip>Reactive Forms</mat-chip>
-            <mat-chip>Chart.js</mat-chip>
-            <mat-chip>SCSS</mat-chip>
-            <mat-chip>Standalone Components</mat-chip>
-          </mat-chip-set>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
 
-  <!-- 保存されたサーベイ一覧 -->
-  <div class="saved-surveys" *ngIf="surveys.length > 0">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>保存されたサーベイ</mat-card-title>
-        <mat-card-subtitle>作成・編集したサーベイの一覧</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="surveys-grid" *ngIf="!isLoading">
-          <div 
-            *ngFor="let survey of surveys" 
-            class="survey-card"
-            (click)="editSurvey(survey.id)"
-          >
-            <div class="survey-header">
-              <h4>{{ survey.title }}</h4>
-              <div class="survey-actions">
-                <button 
-                  mat-icon-button 
-                  (click)="duplicateSurvey(survey.id, $event)"
-                  matTooltip="複製"
-                  class="action-btn"
-                  title="複製"
-                >
-                  📋
-                </button>
-                <button 
-                  mat-icon-button 
-                  (click)="deleteSurvey(survey.id, $event)"
-                  matTooltip="削除"
-                  class="action-btn delete-btn"
-                  title="削除"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-            <p class="survey-description" *ngIf="survey.description">
-              {{ survey.description }}
-            </p>
-            <div class="survey-meta">
-              <span class="survey-id">識別子: {{ survey.id }}</span>
-              <span class="survey-sections">{{ survey.sections.length }} セクション</span>
-              <span class="survey-questions">
-                {{ getTotalQuestions(survey) }} 質問
-              </span>
-            </div>
-            <div class="survey-footer">
-              <span class="survey-author" *ngIf="survey.metadata?.author">
-                作成者: {{ survey.metadata?.author }}
-              </span>
-              <span class="survey-version" *ngIf="survey.metadata?.version">
-                バージョン {{ survey.metadata?.version }}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="loading-message" *ngIf="isLoading">
-          <span>🔄</span>
-          <span>サーベイを読み込み中...</span>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
 
-  <div class="getting-started">
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>はじめに</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="steps">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-content">
-              <h4>アンケートの作成</h4>
-              <p>XMLファイルでアンケートの構造を定義します。質問、選択肢、バリデーションルールを設定できます。</p>
-            </div>
-          </div>
-          
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-content">
-              <h4>動的UI生成</h4>
-              <p>XMLデータを読み込むと、定義された内容に基づいて自動的にアンケートUIが生成されます。</p>
-            </div>
-          </div>
-          
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-content">
-              <h4>回答の収集</h4>
-              <p>生成されたUIでユーザーが回答を入力し、バリデーションが適用されます。</p>
-            </div>
-          </div>
-          
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-content">
-              <h4>データ分析</h4>
-              <p>収集された回答データを分析し、統計情報やグラフで可視化します。</p>
-            </div>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+
 </div>

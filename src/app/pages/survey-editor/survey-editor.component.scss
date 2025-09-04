@@ -147,24 +147,6 @@
   margin-top: 4px;
 }
 
-.info-message {
-  color: #6c757d;
-  font-size: 12px;
-  margin-top: 4px;
-  font-style: italic;
-}
-
-.warning-message {
-  color: #856404;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 4px;
-  padding: 8px 12px;
-  font-size: 12px;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
 .sections-container {
   margin-top: 20px;
 }
@@ -338,15 +320,6 @@
 
     &:hover:not(:disabled) {
       background: #c82333;
-    }
-  }
-
-  &.btn-warning {
-    background: #ffc107;
-    color: #212529;
-
-    &:hover:not(:disabled) {
-      background: #e0a800;
     }
   }
 
