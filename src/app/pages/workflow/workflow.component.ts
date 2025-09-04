@@ -12,6 +12,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { WorkflowDocument, WorkflowStep } from '../../models/survey.model';
+import { WorkflowService } from '../../services/workflow.service';
+import { WorkflowDocumentDialogComponent, WorkflowDocumentDialogData } from '../../components/workflow-document-dialog.component';
+import { WorkflowCommentDialogComponent, WorkflowCommentDialogData } from '../../components/workflow-comment-dialog.component';
+import { WorkflowDetailDialogComponent } from '../../components/workflow-detail-dialog.component';
 
 @Component({
   selector: 'app-workflow',
@@ -35,79 +39,24 @@ export class WorkflowComponent implements OnInit {
 
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private workflowService = inject(WorkflowService);
 
   documents: WorkflowDocument[] = [];
 
-  ngOnInit()
-  {
-    this.loadSampleDocuments();
+  ngOnInit() {
+    this.loadDocuments();
   }
 
-  private loadSampleDocuments()
-  {
-    // サンプルデータを生成
-    this.documents = [
-      {
-        id: 'doc-001',
-        title: '新製品開発計画書',
-        content: '次期新製品の開発計画について、市場調査結果と技術的実現可能性を踏まえて策定した計画書です。',
-        status: 'review',
-        currentStep: 2,
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-20T14:30:00Z',
-        steps: [
-          {
-            id: 'step-1',
-            name: '企画部レビュー',
-            assignee: '田中太郎',
-            status: 'completed',
-            completedAt: '2024-01-18T16:00:00Z'
-          },
-          {
-            id: 'step-2',
-            name: '技術部検証',
-            assignee: '佐藤花子',
-            status: 'in-progress'
-          },
-          {
-            id: 'step-3',
-            name: '経営陣承認',
-            assignee: '山田次郎',
-            status: 'pending'
-          }
-        ]
+  private loadDocuments() {
+    this.workflowService.getAllDocuments().subscribe({
+      next: (documents) => {
+        this.documents = documents;
       },
-      {
-        id: 'doc-002',
-        title: '人事制度改定案',
-        content: '従業員の働きやすさ向上を目的とした人事制度の改定案です。',
-        status: 'draft',
-        currentStep: 1,
-        createdAt: '2024-01-10T09:00:00Z',
-        updatedAt: '2024-01-10T09:00:00Z',
-        steps: [
-          {
-            id: 'step-1',
-            name: '人事部作成',
-            assignee: '鈴木一郎',
-            status: 'completed',
-            completedAt: '2024-01-10T09:00:00Z'
-          },
-          {
-            id: 'step-2',
-            name: '法務部確認',
-            assignee: '高橋美咲',
-            status: 'pending'
-          },
-          {
-            id: 'step-3',
-            name: '社長承認',
-            assignee: '伊藤社長',
-            status: 'pending'
-          }
-        ]
+      error: (error) => {
+        console.error('文書の読み込みエラー:', error);
+        this.snackBar.open('文書の読み込みに失敗しました', '閉じる', { duration: 3000 });
       }
-    ];
+    });
   }
 
   getStatusColor(status: string): string
@@ -170,57 +119,134 @@ export class WorkflowComponent implements OnInit {
     return stepIndex + 1 === doc.currentStep && step.status === 'pending';
   }
 
-  approveStep(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number)
-  {
-    step.status = 'completed';
-    step.completedAt = new Date().toISOString();
-    
-    if (stepIndex + 1 < doc.steps.length)
-    {
-      doc.currentStep++;
-      doc.steps[stepIndex + 1].status = 'in-progress';
-    }
-    else
-    {
-      doc.status = 'approved';
-    }
-    
-    doc.updatedAt = new Date().toISOString();
-    this.snackBar.open('ステップが承認されました', '閉じる', { duration: 3000 });
+  approveStep(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number) {
+    this.workflowService.approveStep(doc.id, stepIndex).subscribe({
+      next: (updatedDoc) => {
+        if (updatedDoc) {
+          this.loadDocuments();
+          this.snackBar.open('ステップが承認されました', '閉じる', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        console.error('承認エラー:', error);
+        this.snackBar.open('承認に失敗しました', '閉じる', { duration: 3000 });
+      }
+    });
   }
 
-  rejectStep(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number)
-  {
-    step.status = 'rejected';
-    doc.status = 'rejected';
-    doc.updatedAt = new Date().toISOString();
-    this.snackBar.open('ステップが却下されました', '閉じる', { duration: 3000 });
+  rejectStep(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number) {
+    this.workflowService.rejectStep(doc.id, stepIndex).subscribe({
+      next: (updatedDoc) => {
+        if (updatedDoc) {
+          this.loadDocuments();
+          this.snackBar.open('ステップが却下されました', '閉じる', { duration: 3000 });
+        }
+      },
+      error: (error) => {
+        console.error('却下エラー:', error);
+        this.snackBar.open('却下に失敗しました', '閉じる', { duration: 3000 });
+      }
+    });
   }
 
-  addComment(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number)
-  {
-    const comment = prompt('コメントを入力してください:');
-    if (comment)
-    {
-      if (!step.comments) step.comments = [];
-      step.comments.push(comment);
-      this.snackBar.open('コメントが追加されました', '閉じる', { duration: 2000 });
-    }
+  addComment(doc: WorkflowDocument, step: WorkflowStep, stepIndex: number) {
+    const dialogData: WorkflowCommentDialogData = {
+      stepName: step.name,
+      assignee: step.assignee,
+      existingComments: step.comments
+    };
+
+    const dialogRef = this.dialog.open(WorkflowCommentDialogComponent, {
+      width: '500px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(comment => {
+      if (comment) {
+        this.workflowService.addComment(doc.id, stepIndex, comment).subscribe({
+          next: (updatedDoc) => {
+            if (updatedDoc) {
+              this.loadDocuments();
+              this.snackBar.open('コメントが追加されました', '閉じる', { duration: 2000 });
+            }
+          },
+          error: (error) => {
+            console.error('コメント追加エラー:', error);
+            this.snackBar.open('コメントの追加に失敗しました', '閉じる', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
-  createNewDocument()
-  {
-    this.snackBar.open('新規文書作成機能は実装予定です', '閉じる', { duration: 3000 });
+  createNewDocument() {
+    const dialogData: WorkflowDocumentDialogData = {
+      isEdit: false
+    };
+
+    const dialogRef = this.dialog.open(WorkflowDocumentDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Dialog closed with result:', result);
+      if (result) {
+        console.log('Creating document with data:', result);
+        this.workflowService.createDocument(result).subscribe({
+          next: (newDoc) => {
+            console.log('Document created successfully:', newDoc);
+            this.loadDocuments();
+            this.snackBar.open('文書が作成されました', '閉じる', { duration: 3000 });
+          },
+          error: (error) => {
+            console.error('文書作成エラー:', error);
+            this.snackBar.open('文書の作成に失敗しました', '閉じる', { duration: 3000 });
+          }
+        });
+      } else {
+        console.log('Dialog was cancelled or closed without result');
+      }
+    });
   }
 
-  viewDocument(doc: WorkflowDocument)
-  {
-    this.snackBar.open(`文書「${doc.title}」の詳細表示`, '閉じる', { duration: 2000 });
+  viewDocument(doc: WorkflowDocument) {
+    this.dialog.open(WorkflowDetailDialogComponent, {
+      width: '900px',
+      maxWidth: '90vw',
+      data: doc
+    });
   }
 
-  editDocument(doc: WorkflowDocument)
-  {
-    this.snackBar.open(`文書「${doc.title}」の編集`, '閉じる', { duration: 2000 });
+  editDocument(doc: WorkflowDocument) {
+    const dialogData: WorkflowDocumentDialogData = {
+      document: doc,
+      isEdit: true
+    };
+
+    const dialogRef = this.dialog.open(WorkflowDocumentDialogComponent, {
+      width: '800px',
+      maxWidth: '90vw',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.workflowService.updateDocument(doc.id, result).subscribe({
+          next: (updatedDoc) => {
+            if (updatedDoc) {
+              this.loadDocuments();
+              this.snackBar.open('文書が更新されました', '閉じる', { duration: 3000 });
+            }
+          },
+          error: (error) => {
+            console.error('文書更新エラー:', error);
+            this.snackBar.open('文書の更新に失敗しました', '閉じる', { duration: 3000 });
+          }
+        });
+      }
+    });
   }
 
 }
