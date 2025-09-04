@@ -13,10 +13,10 @@ import { FormsModule } from '@angular/forms';
 
 import { WorkflowDocument, WorkflowStep } from '../../models/survey.model';
 import { WorkflowService } from '../../services/workflow.service';
-import { WorkflowDocumentDialogComponent, WorkflowDocumentDialogData } from '../../components/workflow-document-dialog.component';
-import { WorkflowCommentDialogComponent, WorkflowCommentDialogData } from '../../components/workflow-comment-dialog.component';
-import { WorkflowDetailDialogComponent } from '../../components/workflow-detail-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog.component';
+import { WorkflowDocumentDialogComponent, WorkflowDocumentDialogData } from '../../dialogs/workflow-document-dialog.component';
+import { WorkflowCommentDialogComponent, WorkflowCommentDialogData } from '../../dialogs/workflow-comment-dialog.component';
+import { WorkflowDetailDialogComponent } from '../../dialogs/workflow-detail-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-workflow',

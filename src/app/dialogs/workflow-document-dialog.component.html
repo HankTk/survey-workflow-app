@@ -1,0 +1,122 @@
+<div class="document-dialog">
+  <h2 mat-dialog-title>
+    {{ data.isEdit ? '文書編集' : '新規文書作成' }}
+  </h2>
+  
+  <form [formGroup]="documentForm" (ngSubmit)="onSubmit()">
+    <div mat-dialog-content class="dialog-content">
+      <!-- 基本情報 -->
+      <div class="form-section">
+        <h3>基本情報</h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>文書タイトル</mat-label>
+          <input matInput formControlName="title" placeholder="例: 新製品開発計画書">
+          <mat-error *ngIf="documentForm.get('title')?.hasError('required')">
+            タイトルは必須です
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>文書内容</mat-label>
+          <textarea 
+            matInput 
+            formControlName="content" 
+            rows="8"
+            placeholder="文書の内容を入力してください（Markdown形式で記述可能）">
+          </textarea>
+          <mat-error *ngIf="documentForm.get('content')?.hasError('required')">
+            内容は必須です
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="half-width">
+          <mat-label>ステータス</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="draft">下書き</mat-option>
+            <mat-option value="review">レビュー中</mat-option>
+            <mat-option value="approved">承認済み</mat-option>
+            <mat-option value="rejected">却下</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <!-- 承認フロー -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3>承認フロー</h3>
+          <button 
+            type="button" 
+            mat-icon-button 
+            color="primary"
+            (click)="addStep()"
+            matTooltip="ステップを追加">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+
+        <div formArrayName="steps" class="steps-container">
+          <div 
+            *ngFor="let step of steps.controls; let i = index" 
+            [formGroupName]="i"
+            class="step-item">
+            
+            <div class="step-header">
+              <h4>ステップ {{ i + 1 }}</h4>
+              <button 
+                type="button" 
+                mat-icon-button 
+                color="warn"
+                (click)="removeStep(i)"
+                [disabled]="steps.length <= 1"
+                matTooltip="ステップを削除">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+
+            <div class="step-fields">
+              <mat-form-field appearance="outline" class="step-name">
+                <mat-label>ステップ名</mat-label>
+                <input matInput formControlName="name" placeholder="例: 企画部レビュー">
+                <mat-error *ngIf="step.get('name')?.hasError('required')">
+                  ステップ名は必須です
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="step-assignee">
+                <mat-label>担当者</mat-label>
+                <input matInput formControlName="assignee" placeholder="例: 田中太郎">
+                <mat-error *ngIf="step.get('assignee')?.hasError('required')">
+                  担当者は必須です
+                </mat-error>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="step-status">
+                <mat-label>ステータス</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="pending">待機中</mat-option>
+                  <mat-option value="in-progress">処理中</mat-option>
+                  <mat-option value="completed">完了</mat-option>
+                  <mat-option value="rejected">却下</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div mat-dialog-actions class="dialog-actions">
+      <button type="button" mat-button (click)="onCancel()">
+        キャンセル
+      </button>
+      <button 
+        type="submit" 
+        mat-raised-button 
+        color="primary"
+        [disabled]="documentForm.invalid">
+        {{ data.isEdit ? '更新' : '作成' }}
+      </button>
+    </div>
+  </form>
+</div>

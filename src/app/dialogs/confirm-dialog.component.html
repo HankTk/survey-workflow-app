@@ -1,0 +1,29 @@
+<div class="dialog-container">
+  <div class="dialog-header">
+    <div class="icon-container" [class.destructive]="data.isDestructive">
+      <span class="icon">{{ data.isDestructive ? '⚠️' : '❓' }}</span>
+    </div>
+    <h2 mat-dialog-title class="dialog-title">{{ data.title }}</h2>
+  </div>
+  
+  <mat-dialog-content class="dialog-content">
+    <p class="message">{{ data.message }}</p>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions class="dialog-actions">
+    <button 
+      mat-stroked-button 
+      (click)="onCancel()"
+      class="cancel-button">
+      {{ data.cancelText || 'キャンセル' }}
+    </button>
+    <button 
+      mat-raised-button 
+      [color]="data.isDestructive ? 'warn' : 'primary'"
+      [mat-dialog-close]="true"
+      cdkFocusInitial
+      class="confirm-button">
+      {{ data.confirmText || '確認' }}
+    </button>
+  </mat-dialog-actions>
+</div>

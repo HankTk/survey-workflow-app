@@ -8,8 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { Survey, SurveySection, SurveyQuestion } from '../../models/survey.model';
 import { SurveyEditorService } from '../../services/survey-editor.service';
 import { SurveyFileService } from '../../services/survey-file.service';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog.component';
-import { SurveyPreviewDialogComponent, SurveyPreviewData } from '../../components/survey-preview-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../dialogs/confirm-dialog.component';
+import { SurveyPreviewDialogComponent, SurveyPreviewData } from '../../dialogs/survey-preview-dialog.component';
 
 @Component({
   selector: 'app-survey-editor',

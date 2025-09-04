@@ -1,0 +1,53 @@
+<div class="comment-dialog">
+  <h2 mat-dialog-title>コメント追加</h2>
+  
+  <div mat-dialog-content class="dialog-content">
+    <div class="step-info">
+      <h3>{{ data.stepName }}</h3>
+      <p>担当者: {{ data.assignee }}</p>
+    </div>
+
+    <form [formGroup]="commentForm" (ngSubmit)="onSubmit()">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>コメント</mat-label>
+        <textarea 
+          matInput 
+          formControlName="comment" 
+          rows="4"
+          placeholder="コメントを入力してください">
+        </textarea>
+        <mat-error *ngIf="commentForm.get('comment')?.hasError('required')">
+          コメントは必須です
+        </mat-error>
+        <mat-error *ngIf="commentForm.get('comment')?.hasError('minlength')">
+          コメントは3文字以上で入力してください
+        </mat-error>
+      </mat-form-field>
+    </form>
+
+    <div *ngIf="data.existingComments && data.existingComments.length > 0" class="existing-comments">
+      <h4>既存のコメント</h4>
+      <div class="comments-list">
+        <mat-chip-set>
+          <mat-chip *ngFor="let comment of data.existingComments" class="comment-chip">
+            {{ comment }}
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+    </div>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button type="button" mat-button (click)="onCancel()">
+      キャンセル
+    </button>
+    <button 
+      type="button" 
+      mat-raised-button 
+      color="primary"
+      (click)="onSubmit()"
+      [disabled]="commentForm.invalid">
+      追加
+    </button>
+  </div>
+</div>

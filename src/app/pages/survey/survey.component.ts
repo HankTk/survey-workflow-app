@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { SurveyFileService } from '../../services/survey-file.service';
 import { SurveyEditorService } from '../../services/survey-editor.service';
 import { Survey } from '../../models/survey.model';
-import { ConfirmDialogComponent, ConfirmDialogData } from '../../components/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../dialogs/confirm-dialog.component';
 
 @Component({
   selector: 'app-survey',

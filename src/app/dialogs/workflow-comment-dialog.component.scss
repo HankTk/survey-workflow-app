@@ -1,0 +1,67 @@
+.comment-dialog {
+  max-width: 500px;
+  width: 100%;
+}
+
+.dialog-content {
+  padding: 0;
+}
+
+.step-info {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.step-info h3 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.step-info p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.existing-comments {
+  margin-top: 20px;
+}
+
+.existing-comments h4 {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.comments-list {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.comment-chip {
+  margin: 4px;
+  background: #e3f2fd;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  padding: 20px 0 0 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 20px;
+}
+
+.dialog-actions button {
+  margin-left: 12px;
+}

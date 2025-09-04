@@ -1,0 +1,93 @@
+<div class="detail-dialog">
+  <h2 mat-dialog-title>{{ data.title }}</h2>
+  
+  <div mat-dialog-content class="dialog-content">
+    <!-- 文書情報 -->
+    <mat-card class="document-info">
+      <mat-card-header>
+        <mat-card-title>文書情報</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>ステータス:</label>
+            <mat-chip [color]="getStatusColor(data.status)" selected>
+              {{ getStatusText(data.status) }}
+            </mat-chip>
+          </div>
+          <div class="info-item">
+            <label>現在のステップ:</label>
+            <span>{{ data.currentStep }}/{{ data.steps.length }}</span>
+          </div>
+          <div class="info-item">
+            <label>作成日:</label>
+            <span>{{ data.createdAt | date:'short' }}</span>
+          </div>
+          <div class="info-item">
+            <label>最終更新:</label>
+            <span>{{ data.updatedAt | date:'short' }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 文書内容 -->
+    <mat-card class="document-content">
+      <mat-card-header>
+        <mat-card-title>文書内容</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="content-text" [innerHTML]="formatContent(data.content)"></div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- 承認フロー -->
+    <mat-card class="workflow-steps">
+      <mat-card-header>
+        <mat-card-title>承認フロー</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-stepper [linear]="false" orientation="vertical">
+          <mat-step 
+            *ngFor="let step of data.steps; let i = index" 
+            [completed]="step.status === 'completed'"
+            [state]="getStepState(step, i, data.currentStep)">
+            
+            <ng-template matStepLabel>
+              <div class="step-label">
+                <span class="step-name">{{ step.name }}</span>
+                <span class="step-assignee">担当: {{ step.assignee }}</span>
+                <mat-chip [color]="getStepStatusColor(step.status)" selected>
+                  {{ getStepStatusText(step.status) }}
+                </mat-chip>
+              </div>
+            </ng-template>
+            
+            <div class="step-content">
+              <div *ngIf="step.completedAt" class="completion-info">
+                <mat-icon>check_circle</mat-icon>
+                <span>完了日時: {{ step.completedAt | date:'short' }}</span>
+              </div>
+              
+              <div *ngIf="step.comments && step.comments.length > 0" class="comments-section">
+                <h4>コメント</h4>
+                <div class="comments-list">
+                  <div *ngFor="let comment of step.comments" class="comment-item">
+                    <mat-icon>comment</mat-icon>
+                    <span>{{ comment }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-step>
+        </mat-stepper>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="onClose()">
+      閉じる
+    </button>
+  </div>
+</div>

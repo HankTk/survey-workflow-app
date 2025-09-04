@@ -1,0 +1,277 @@
+.document-dialog {
+  max-width: 900px;
+  width: 100%;
+  max-height: 95vh;
+}
+
+.dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f8f9fa;
+}
+
+.form-section {
+  margin-bottom: 24px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e8e8e8;
+}
+
+.form-section h3 {
+  margin: 0 0 24px 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+  font-weight: 700;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #007bff;
+  position: relative;
+}
+
+.form-section h3::before {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.section-header h3 {
+  margin: 0;
+  border: none;
+  padding: 0;
+}
+
+.section-header h3::before {
+  display: none;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.half-width {
+  width: 48%;
+  margin-bottom: 20px;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.step-item {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.step-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.step-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  border-radius: 12px 12px 0 0;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.step-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-header h4::before {
+  content: '📋';
+  font-size: 1.2rem;
+}
+
+.step-fields {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.step-name {
+  grid-column: 1;
+}
+
+.step-assignee {
+  grid-column: 2;
+}
+
+.step-status {
+  grid-column: 3;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+  padding: 20px 24px 20px 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.dialog-actions button {
+  min-width: 100px;
+  height: 40px;
+  font-weight: 500;
+  border-radius: 6px;
+  text-transform: none;
+  font-size: 0.9rem;
+  margin-left: 12px;
+  margin-bottom: 0;
+}
+
+.dialog-actions button[mat-button] {
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.dialog-actions button[mat-button]:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.dialog-actions button[mat-raised-button] {
+  background: #007bff;
+  color: white;
+}
+
+.dialog-actions button[mat-raised-button]:hover {
+  background: #0056b3;
+}
+
+/* フォームフィールドのスタイリング */
+mat-form-field {
+  width: 100%;
+}
+
+mat-form-field.mat-form-field-appearance-outline .mat-form-field-outline {
+  color: #ced4da;
+}
+
+mat-form-field.mat-focused .mat-form-field-outline-thick {
+  color: #007bff;
+}
+
+mat-form-field .mat-form-field-label {
+  color: #6c757d;
+}
+
+mat-form-field.mat-focused .mat-form-field-label {
+  color: #007bff;
+}
+
+/* ボタンのスタイリング */
+button[mat-icon-button] {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+button[mat-icon-button]:hover {
+  background: #e3f2fd;
+  color: #007bff;
+  transform: scale(1.1);
+}
+
+button[mat-icon-button][color="warn"]:hover {
+  background: #ffebee;
+  color: #dc3545;
+}
+
+/* スクロールバーのスタイリング */
+.dialog-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dialog-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+@media (max-width: 768px) {
+  .document-dialog {
+    max-width: 95vw;
+    margin: 16px;
+  }
+  
+  .form-section {
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .step-item {
+    padding: 16px;
+  }
+  
+  .step-fields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .step-name,
+  .step-assignee,
+  .step-status {
+    grid-column: 1;
+  }
+  
+  .dialog-actions {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 16px 16px;
+  }
+  
+  .dialog-actions button {
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 0;
+  }
+}

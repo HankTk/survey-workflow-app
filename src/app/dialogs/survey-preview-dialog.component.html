@@ -1,0 +1,97 @@
+<div class="preview-dialog">
+  <h2 mat-dialog-title>{{ data.survey.title }}</h2>
+  
+  <div mat-dialog-content class="preview-content">
+    <p *ngIf="data.survey.description" class="survey-description">
+      {{ data.survey.description }}
+    </p>
+    
+    <form [formGroup]="previewForm" class="preview-form">
+      <div *ngFor="let section of data.survey.sections" class="section">
+        <h3 class="section-title">{{ section.title }}</h3>
+        <p *ngIf="section.description" class="section-description">{{ section.description }}</p>
+        
+        <div *ngFor="let question of section.questions" class="question">
+          <div class="question-label">
+            {{ question.label }}
+            <span *ngIf="question.required" class="required">*</span>
+          </div>
+          
+          <!-- テキスト入力 -->
+          <mat-form-field *ngIf="question.type === 'text'" appearance="outline">
+            <input 
+              matInput 
+              [formControlName]="question.id"
+              [placeholder]="question.placeholder || ''"
+            >
+          </mat-form-field>
+          
+          <!-- 数値入力 -->
+          <mat-form-field *ngIf="question.type === 'number'" appearance="outline">
+            <input 
+              matInput 
+              type="number"
+              [formControlName]="question.id"
+              [placeholder]="question.placeholder || ''"
+            >
+          </mat-form-field>
+          
+          <!-- テキストエリア -->
+          <mat-form-field *ngIf="question.type === 'textarea'" appearance="outline">
+            <textarea 
+              matInput 
+              [formControlName]="question.id"
+              [placeholder]="question.placeholder || ''"
+              rows="3"
+            ></textarea>
+          </mat-form-field>
+          
+          <!-- セレクトボックス -->
+          <mat-form-field *ngIf="question.type === 'select'" appearance="outline">
+            <mat-select [formControlName]="question.id">
+              <mat-option *ngFor="let option of question.options" [value]="option">
+                {{ option }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <!-- ラジオボタン -->
+          <mat-radio-group *ngIf="question.type === 'radio'" [formControlName]="question.id">
+            <mat-radio-button *ngFor="let option of question.options" [value]="option">
+              {{ option }}
+            </mat-radio-button>
+          </mat-radio-group>
+          
+          <!-- チェックボックス -->
+          <div *ngIf="question.type === 'checkbox'" class="checkbox-group">
+            <mat-checkbox 
+              *ngFor="let option of question.options" 
+              [formControlName]="question.id + '_' + option"
+            >
+              {{ option }}
+            </mat-checkbox>
+          </div>
+          
+          <!-- 日付選択 -->
+          <mat-form-field *ngIf="question.type === 'date'" appearance="outline">
+            <input 
+              matInput 
+              [matDatepicker]="picker"
+              [formControlName]="question.id"
+              [placeholder]="question.placeholder || '日付を選択'"
+            >
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+    </form>
+  </div>
+  
+  <div mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="onClose()">閉じる</button>
+    <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!previewForm.valid">
+      送信（プレビュー）
+    </button>
+  </div>
+</div>
