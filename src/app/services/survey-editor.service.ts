@@ -1,36 +1,51 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Survey } from '../models/survey.model';
+import { JsonDbService } from './json-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SurveyEditorService {
-  private readonly STORAGE_KEY = 'survey_templates';
   private surveysSubject = new BehaviorSubject<Survey[]>([]);
   public surveys$ = this.surveysSubject.asObservable();
 
-  constructor() {
+  constructor(private jsonDbService: JsonDbService) {
     this.loadSurveys();
   }
 
-  // ローカルストレージからサーベイを読み込み
+  // JSON-DBサーバーからサーベイを読み込み
   private loadSurveys(): void {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
+    this.jsonDbService.getAllSurveys().subscribe({
+      next: (surveys) => {
+        this.surveysSubject.next(surveys);
+      },
+      error: (error) => {
+        console.error('Failed to load surveys:', error);
+        // フォールバック: ローカルストレージから読み込み
+        this.loadFromLocalStorage();
+      }
+    });
+  }
+
+  // ローカルストレージからサーベイを読み込み（フォールバック）
+  private loadFromLocalStorage(): void {
+    const stored = localStorage.getItem('survey_templates');
     let surveys = stored ? JSON.parse(stored) : [];
     
     // データが存在しない場合はサンプルアンケートを作成
     if (surveys.length === 0) {
       surveys = [this.getSampleSurvey()];
-      this.saveSurveys(surveys);
+      this.saveToLocalStorage(surveys);
     }
     
     this.surveysSubject.next(surveys);
   }
 
-  // ローカルストレージにサーベイを保存
-  private saveSurveys(surveys: Survey[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(surveys));
+  // ローカルストレージにサーベイを保存（フォールバック）
+  private saveToLocalStorage(surveys: Survey[]): void {
+    localStorage.setItem('survey_templates', JSON.stringify(surveys));
     this.surveysSubject.next(surveys);
   }
 
@@ -41,26 +56,13 @@ export class SurveyEditorService {
 
   // 特定のサーベイを取得
   getSurvey(id: string): Observable<Survey> {
-    const surveys = this.surveysSubject.value;
-    const survey = surveys.find(s => s.id === id);
-    
-    if (survey) {
-      return of(survey);
-    } else {
-      // サンプルサーベイを返す（デモ用）
-      return of(this.getSampleSurvey());
-    }
+    return this.jsonDbService.getSurveyById(id).pipe(
+      map(survey => survey || this.getSampleSurvey())
+    );
   }
 
   // 新しいサーベイを作成
   createSurvey(survey: Survey): Observable<Survey> {
-    const surveys = this.surveysSubject.value;
-    
-    // IDの重複チェック
-    if (surveys.some(s => s.id === survey.id)) {
-      throw new Error(`サーベイID "${survey.id}" は既に存在します`);
-    }
-
     // メタデータを設定
     survey.metadata = {
       created: new Date().toISOString().split('T')[0],
@@ -68,57 +70,67 @@ export class SurveyEditorService {
       author: survey.metadata?.author || 'Unknown'
     };
 
-    surveys.push(survey);
-    this.saveSurveys(surveys);
-    
-    return of(survey);
+    return this.jsonDbService.createSurvey(survey).pipe(
+      map((savedSurvey) => {
+        // ローカルキャッシュを更新
+        const currentSurveys = this.surveysSubject.value;
+        this.surveysSubject.next([...currentSurveys, savedSurvey]);
+        return savedSurvey;
+      })
+    );
   }
 
   // サーベイを更新
   updateSurvey(survey: Survey): Observable<Survey> {
-    const surveys = this.surveysSubject.value;
-    const index = surveys.findIndex(s => s.id === survey.id);
+    const currentSurveys = this.surveysSubject.value;
+    const existingSurvey = currentSurveys.find(s => s.id === survey.id);
     
-    if (index === -1) {
+    if (!existingSurvey) {
       throw new Error(`サーベイID "${survey.id}" が見つかりません`);
     }
 
     // メタデータを更新
     survey.metadata = {
-      created: surveys[index].metadata?.created || new Date().toISOString().split('T')[0],
-      version: this.incrementVersion(surveys[index].metadata?.version || '1.0'),
-      author: survey.metadata?.author || surveys[index].metadata?.author || 'Unknown'
+      created: existingSurvey.metadata?.created || new Date().toISOString().split('T')[0],
+      version: this.incrementVersion(existingSurvey.metadata?.version || '1.0'),
+      author: survey.metadata?.author || existingSurvey.metadata?.author || 'Unknown'
     };
 
-    surveys[index] = survey;
-    this.saveSurveys(surveys);
-    
-    return of(survey);
+    return this.jsonDbService.updateSurvey(survey.id, survey).pipe(
+      map((savedSurvey) => {
+        // ローカルキャッシュを更新
+        const updatedSurveys = currentSurveys.map(s => 
+          s.id === survey.id ? savedSurvey : s
+        );
+        this.surveysSubject.next(updatedSurveys);
+        return savedSurvey;
+      })
+    );
   }
 
   // サーベイを削除
   deleteSurvey(id: string): Observable<boolean> {
-    const surveys = this.surveysSubject.value;
-    const filteredSurveys = surveys.filter(s => s.id !== id);
-    
-    if (filteredSurveys.length === surveys.length) {
-      throw new Error(`サーベイID "${id}" が見つかりません`);
-    }
-
-    this.saveSurveys(filteredSurveys);
-    return of(true);
+    return this.jsonDbService.deleteSurvey(id).pipe(
+      map(() => {
+        // ローカルキャッシュを更新
+        const currentSurveys = this.surveysSubject.value;
+        const updatedSurveys = currentSurveys.filter(s => s.id !== id);
+        this.surveysSubject.next(updatedSurveys);
+        return true;
+      })
+    );
   }
 
   // サーベイを複製
   duplicateSurvey(id: string, newId: string): Observable<Survey> {
-    const surveys = this.surveysSubject.value;
-    const originalSurvey = surveys.find(s => s.id === id);
+    const currentSurveys = this.surveysSubject.value;
+    const originalSurvey = currentSurveys.find(s => s.id === id);
     
     if (!originalSurvey) {
       throw new Error(`サーベイID "${id}" が見つかりません`);
     }
 
-    if (surveys.some(s => s.id === newId)) {
+    if (currentSurveys.some(s => s.id === newId)) {
       throw new Error(`サーベイID "${newId}" は既に存在します`);
     }
 
@@ -133,10 +145,7 @@ export class SurveyEditorService {
       }
     };
 
-    surveys.push(duplicatedSurvey);
-    this.saveSurveys(surveys);
-    
-    return of(duplicatedSurvey);
+    return this.createSurvey(duplicatedSurvey);
   }
 
   // バージョン番号をインクリメント

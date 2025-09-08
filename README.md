@@ -40,6 +40,8 @@ Angular 20のStandalone Componentsを使用してXMLデータから動的にア�
 - **スタイル**: SCSS
 - **アーキテクチャ**: Standalone Components
 - **CDK**: Angular CDK 20
+- **データベース**: JSON-DB Server (REST API)
+- **HTTP通信**: Angular HttpClient
 
 ## 📁 プロジェクト構造
 
@@ -244,6 +246,38 @@ ng build --configuration development
 3. 変更をコミット (`git commit -m 'Add some amazing feature'`)
 4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
 5. プルリクエストを作成
+
+## 📊 データベース
+
+このアプリケーションはJSON-DBサーバーを使用してデータを管理しています。
+
+### データ構造
+- **surveys**: アンケートテンプレート
+- **surveyResponses**: アンケート回答データ
+- **workflowDocuments**: ワークフロー文書
+
+### API エンドポイント
+- `GET /surveys` - すべてのアンケートテンプレートを取得
+- `POST /surveys` - 新しいアンケートテンプレートを作成
+- `PUT /surveys/:id` - アンケートテンプレートを更新
+- `DELETE /surveys/:id` - アンケートテンプレートを削除
+
+- `GET /surveyResponses` - すべてのアンケート回答を取得
+- `POST /surveyResponses` - 新しいアンケート回答を保存
+
+- `GET /workflowDocuments` - すべてのワークフロー文書を取得
+- `POST /workflowDocuments` - 新しいワークフロー文書を作成
+- `PUT /workflowDocuments/:id` - ワークフロー文書を更新
+- `DELETE /workflowDocuments/:id` - ワークフロー文書を削除
+
+### サーバー起動方法
+```bash
+# JSON-DBサーバーのみを起動
+npm run json-server
+
+# AngularアプリとJSON-DBサーバーを同時に起動
+npm run start:full
+```
 
 ## 📞 サポート
 

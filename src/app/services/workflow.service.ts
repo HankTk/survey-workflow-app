@@ -1,33 +1,47 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { WorkflowDocument, WorkflowStep } from '../models/survey.model';
+import { JsonDbService } from './json-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkflowService {
-  private readonly STORAGE_KEY = 'workflow_documents';
   private documentsSubject = new BehaviorSubject<WorkflowDocument[]>([]);
   public documents$ = this.documentsSubject.asObservable();
 
-  constructor() {
+  constructor(private jsonDbService: JsonDbService) {
     this.loadDocuments();
   }
 
   private loadDocuments(): void {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
+    this.jsonDbService.getAllWorkflowDocuments().subscribe({
+      next: (documents) => {
+        this.documentsSubject.next(documents);
+      },
+      error: (error) => {
+        console.error('Failed to load workflow documents:', error);
+        // フォールバック: ローカルストレージから読み込み
+        this.loadFromLocalStorage();
+      }
+    });
+  }
+
+  private loadFromLocalStorage(): void {
+    const stored = localStorage.getItem('workflow_documents');
     let documents = stored ? JSON.parse(stored) : [];
     
     if (documents.length === 0) {
       documents = this.getSampleDocuments();
-      this.saveDocuments(documents);
+      this.saveToLocalStorage(documents);
     }
     
     this.documentsSubject.next(documents);
   }
 
-  private saveDocuments(documents: WorkflowDocument[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(documents));
+  private saveToLocalStorage(documents: WorkflowDocument[]): void {
+    localStorage.setItem('workflow_documents', JSON.stringify(documents));
     this.documentsSubject.next(documents);
   }
 
@@ -36,9 +50,9 @@ export class WorkflowService {
   }
 
   getDocumentById(id: string): Observable<WorkflowDocument | undefined> {
-    const documents = this.documentsSubject.value;
-    const document = documents.find(doc => doc.id === id);
-    return of(document);
+    return this.jsonDbService.getWorkflowDocumentById(id).pipe(
+      map(document => document || undefined)
+    );
   }
 
   createDocument(document: Omit<WorkflowDocument, 'id' | 'createdAt' | 'updatedAt' | 'currentStep'>): Observable<WorkflowDocument> {
@@ -50,47 +64,62 @@ export class WorkflowService {
       currentStep: 1
     };
 
-    const documents = [...this.documentsSubject.value, newDocument];
-    this.saveDocuments(documents);
-    
-    return of(newDocument);
+    return this.jsonDbService.createWorkflowDocument(newDocument).pipe(
+      map((savedDocument) => {
+        // ローカルキャッシュを更新
+        const currentDocuments = this.documentsSubject.value;
+        this.documentsSubject.next([...currentDocuments, savedDocument]);
+        return savedDocument;
+      })
+    );
   }
 
   updateDocument(id: string, updates: Partial<WorkflowDocument>): Observable<WorkflowDocument | null> {
-    const documents = this.documentsSubject.value;
-    const index = documents.findIndex(doc => doc.id === id);
+    const currentDocuments = this.documentsSubject.value;
+    const existingDocument = currentDocuments.find(doc => doc.id === id);
     
-    if (index === -1) {
+    if (!existingDocument) {
       return of(null);
     }
 
     const updatedDocument = {
-      ...documents[index],
+      ...existingDocument,
       ...updates,
       updatedAt: new Date().toISOString()
     };
 
-    documents[index] = updatedDocument;
-    this.saveDocuments(documents);
-    
-    return of(updatedDocument);
+    return this.jsonDbService.updateWorkflowDocument(id, updatedDocument).pipe(
+      map((savedDocument) => {
+        // ローカルキャッシュを更新
+        const updatedDocuments = currentDocuments.map(doc => 
+          doc.id === id ? savedDocument : doc
+        );
+        this.documentsSubject.next(updatedDocuments);
+        return savedDocument;
+      })
+    );
   }
 
   deleteDocument(id: string): Observable<boolean> {
-    const documents = this.documentsSubject.value.filter(doc => doc.id !== id);
-    this.saveDocuments(documents);
-    return of(true);
+    return this.jsonDbService.deleteWorkflowDocument(id).pipe(
+      map(() => {
+        // ローカルキャッシュを更新
+        const currentDocuments = this.documentsSubject.value;
+        const updatedDocuments = currentDocuments.filter(doc => doc.id !== id);
+        this.documentsSubject.next(updatedDocuments);
+        return true;
+      })
+    );
   }
 
   approveStep(documentId: string, stepIndex: number): Observable<WorkflowDocument | null> {
-    const documents = this.documentsSubject.value;
-    const docIndex = documents.findIndex(doc => doc.id === documentId);
+    const currentDocuments = this.documentsSubject.value;
+    const document = currentDocuments.find(doc => doc.id === documentId);
     
-    if (docIndex === -1) {
+    if (!document) {
       return of(null);
     }
 
-    const document = documents[docIndex];
     const step = document.steps[stepIndex];
     
     if (!step) {
@@ -111,21 +140,18 @@ export class WorkflowService {
     }
 
     document.updatedAt = new Date().toISOString();
-    documents[docIndex] = document;
-    this.saveDocuments(documents);
     
-    return of(document);
+    return this.updateDocument(documentId, document);
   }
 
   rejectStep(documentId: string, stepIndex: number): Observable<WorkflowDocument | null> {
-    const documents = this.documentsSubject.value;
-    const docIndex = documents.findIndex(doc => doc.id === documentId);
+    const currentDocuments = this.documentsSubject.value;
+    const document = currentDocuments.find(doc => doc.id === documentId);
     
-    if (docIndex === -1) {
+    if (!document) {
       return of(null);
     }
 
-    const document = documents[docIndex];
     const step = document.steps[stepIndex];
     
     if (!step) {
@@ -137,21 +163,17 @@ export class WorkflowService {
     document.status = 'rejected';
     document.updatedAt = new Date().toISOString();
     
-    documents[docIndex] = document;
-    this.saveDocuments(documents);
-    
-    return of(document);
+    return this.updateDocument(documentId, document);
   }
 
   addComment(documentId: string, stepIndex: number, comment: string): Observable<WorkflowDocument | null> {
-    const documents = this.documentsSubject.value;
-    const docIndex = documents.findIndex(doc => doc.id === documentId);
+    const currentDocuments = this.documentsSubject.value;
+    const document = currentDocuments.find(doc => doc.id === documentId);
     
-    if (docIndex === -1) {
+    if (!document) {
       return of(null);
     }
 
-    const document = documents[docIndex];
     const step = document.steps[stepIndex];
     
     if (!step) {
@@ -165,10 +187,7 @@ export class WorkflowService {
     step.comments.push(comment);
     document.updatedAt = new Date().toISOString();
     
-    documents[docIndex] = document;
-    this.saveDocuments(documents);
-    
-    return of(document);
+    return this.updateDocument(documentId, document);
   }
 
   private getSampleDocuments(): WorkflowDocument[] {

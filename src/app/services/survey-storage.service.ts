@@ -1,57 +1,95 @@
 import { Injectable } from '@angular/core';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SurveyResponse } from '../models/survey.model';
+import { JsonDbService } from './json-db.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SurveyStorageService {
-  private readonly STORAGE_KEY = 'survey_responses';
+  private responsesSubject = new BehaviorSubject<SurveyResponse[]>([]);
+  public responses$ = this.responsesSubject.asObservable();
 
-  constructor() { }
+  constructor(private jsonDbService: JsonDbService) {
+    this.loadResponses();
+  }
+
+  private loadResponses(): void {
+    this.jsonDbService.getAllSurveyResponses().subscribe({
+      next: (responses) => {
+        this.responsesSubject.next(responses);
+      },
+      error: (error) => {
+        console.error('Failed to load survey responses:', error);
+        // フォールバック: ローカルストレージから読み込み
+        this.loadFromLocalStorage();
+      }
+    });
+  }
+
+  private loadFromLocalStorage(): void {
+    const stored = localStorage.getItem('survey_responses');
+    const responses = stored ? JSON.parse(stored) : [];
+    this.responsesSubject.next(responses);
+  }
 
   // アンケート回答を保存
-  saveResponse(response: SurveyResponse): void {
-    const responses = this.getAllResponses();
-    responses.push(response);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(responses));
+  saveResponse(response: SurveyResponse): Observable<SurveyResponse> {
+    return this.jsonDbService.saveSurveyResponse(response).pipe(
+      map((savedResponse) => {
+        // ローカルキャッシュを更新
+        const currentResponses = this.responsesSubject.value;
+        this.responsesSubject.next([...currentResponses, savedResponse]);
+        return savedResponse;
+      })
+    );
   }
 
   // すべてのアンケート回答を取得
   getAllResponses(): SurveyResponse[] {
-    const stored = localStorage.getItem(this.STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return this.responsesSubject.value;
   }
 
   // 特定のアンケートIDの回答を取得
-  getResponsesBySurveyId(surveyId: string): SurveyResponse[] {
-    return this.getAllResponses().filter(response => response.surveyId === surveyId);
+  getResponsesBySurveyId(surveyId: string): Observable<SurveyResponse[]> {
+    return this.jsonDbService.getSurveyResponsesBySurveyId(surveyId);
   }
 
   // 回答を削除
-  deleteResponse(index: number): void {
-    const responses = this.getAllResponses();
-    responses.splice(index, 1);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(responses));
+  deleteResponse(id: number): Observable<any> {
+    return this.jsonDbService.deleteSurveyResponse(id).pipe(
+      map(() => {
+        // ローカルキャッシュを更新
+        const currentResponses = this.responsesSubject.value;
+        const updatedResponses = currentResponses.filter((_, index) => index !== id);
+        this.responsesSubject.next(updatedResponses);
+        return true;
+      })
+    );
   }
 
   // すべての回答をクリア
-  clearAllResponses(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
+  clearAllResponses(): Observable<any> {
+    // JSON-DBサーバーでは個別削除が必要
+    const currentResponses = this.responsesSubject.value;
+    const deletePromises = currentResponses.map((_, index) => 
+      this.jsonDbService.deleteSurveyResponse(index).toPromise()
+    );
+    
+    return new Observable(observer => {
+      Promise.all(deletePromises).then(() => {
+        this.responsesSubject.next([]);
+        observer.next(true);
+        observer.complete();
+      }).catch(error => {
+        observer.error(error);
+      });
+    });
   }
 
   // 統計情報を取得
-  getStatistics(): any {
-    const responses = this.getAllResponses();
-    const surveyCounts: { [key: string]: number } = {};
-    
-    responses.forEach(response => {
-      surveyCounts[response.surveyId || 'unknown'] = (surveyCounts[response.surveyId || 'unknown'] || 0) + 1;
-    });
-
-    return {
-      totalResponses: responses.length,
-      surveyCounts: surveyCounts,
-      lastSubmission: responses.length > 0 ? responses[responses.length - 1].submittedAt : null
-    };
+  getStatistics(): Observable<any> {
+    return this.jsonDbService.getStatistics();
   }
 }
